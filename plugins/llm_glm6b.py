@@ -3,7 +3,7 @@ from utils.base import ChatBot
 from utils import utils
 
 class Glm6BChatBot(ChatBot):
-    def __init__(self, model, tokenizer=None):
+    def __init__(self, model=None, tokenizer=None):
         super().__init__(model)
         self.tokenizer = tokenizer
         
