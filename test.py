@@ -13,11 +13,13 @@ if response.status_code == 200:
   import re
   # Extract the generated text from the response
   for line in response.iter_lines():
-    text = line.decode("utf-8")
+    text = json.load(line.decode("utf-8"))
+    print(text["response"])
+    """ text = line.decode("utf-8")
     json_strings = re.findall(r"\{[^}]*\}", text)
     for json_string in json_strings:
       data = json.loads(json_string)
       response_text = data["response"]
-      print(response_text)
+      print(response_text) """
 else:
     print(f"Request failed with status code {response.status_code}")
