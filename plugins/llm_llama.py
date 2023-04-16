@@ -25,7 +25,7 @@ class LlamaChatBot(ChatBot):
 
     def chat(self, prompt, history_formatted, max_length, top_p, temperature, mix=False):
         if mix:
-            search_results = find(prompt)
+            search_results = find(prompt, mix)
             prompt = ' '.join([prompt] + [result['content'] for result in search_results])
             prompt = history_formatted+"%s\nAssistant: " % prompt
         else:
