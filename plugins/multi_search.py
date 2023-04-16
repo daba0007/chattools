@@ -1,5 +1,5 @@
-from bing_search import BingSearch
-from fess_search import FessSearch
+from plugins.bing_search import BingSearch
+from plugins.fess_search import FessSearch
 
 class MultiSearch:
     def __init__(self, weights):

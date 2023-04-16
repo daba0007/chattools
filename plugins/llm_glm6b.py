@@ -1,4 +1,4 @@
-from search import find
+from plugins.search import find
 from utils.base import ChatBot
 from utils import utils
 

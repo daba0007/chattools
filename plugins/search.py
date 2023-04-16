@@ -1,6 +1,6 @@
-from bing_search import BingSearch
-from fess_search import FessSearch
-from multi_search import MultiSearch
+from plugins.bing_search import BingSearch
+from plugins.fess_search import FessSearch
+from plugins.multi_search import MultiSearch
 from utils import utils
 
 
