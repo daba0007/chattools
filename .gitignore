@@ -1,24 +1,4 @@
 __pycache__
-model
-WPy64-38100
-testdb.db
-*.baiduyun.uploading.cfg
-*.7z
-sy
-*.tmp
-xw
-txt
-*.001
-*.002
-*.003
-cpu
-新建文件夹
-txt1
-txt_out
-zsk
-zsk_out
-record.db
-# virtual environment
-/venv/
-venv.bat
-*.bin
+.idea
+.vscode
+*.log

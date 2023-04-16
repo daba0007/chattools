@@ -1,80 +1,80 @@
-from plugins.settings import settings
+from search import find
+from utils.base import ChatBot
+from utils import utils
 
-def chat_init(history):
-    history_formatted = None
-    if history is not None:
-        history_formatted = []
-        tmp = []
-        for i, old_chat in enumerate(history):
-            if len(tmp) == 0 and old_chat['role'] == "user":
-                tmp.append(old_chat['content'])
-            elif old_chat['role'] == "AI" or old_chat['role'] == 'assistant':
-                tmp.append(old_chat['content'])
-                history_formatted.append(tuple(tmp))
-                tmp = []
-            else:
-                continue
-    return history_formatted
+class Glm6BChatBot(ChatBot):
+    def __init__(self, model, tokenizer):
+        super().__init__(model)
+        self.tokenizer = tokenizer
+        
+    def chat_init(self, history):
+        history_formatted = None
+        if history is not None:
+            history_formatted = []
+            current_chat = []
+            for _, old_chat in enumerate(history):
+                if len(current_chat) == 0 and old_chat['role'] == "user":
+                    current_chat.append(old_chat['content'])
+                elif old_chat['role'] == "AI" or old_chat['role'] == 'assistant':
+                    current_chat.append(old_chat['content'])
+                    history_formatted.append(tuple(current_chat))
+                    current_chat = []
+                else:
+                    continue
+        return history_formatted
+        
+    def load_model(self):
+        from transformers import AutoModel, AutoTokenizer
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            utils.GLM["path"], local_files_only=True, trust_remote_code=True)
+        self.model = AutoModel.from_pretrained(
+            utils.GLM["path"], local_files_only=True, trust_remote_code=True)
+        if not (utils.Lora == '' or utils.Lora == None):
+            print('Lora模型地址', utils.Lora)
+            from peft import PeftModel
+            self.model = PeftModel.from_pretrained(self.model, utils.Lora)
 
+        device, precision = utils.GLM["strategy"].split()
+        self.handle_device(precision, device)
+        self.handle_precision(precision, device)
+        self.model = self.model.eval()
 
-def chat_one(prompt, history_formatted, max_length, top_p, temperature, zhishiku=False):
-    for response, history in model.stream_chat(tokenizer, prompt, history_formatted,
-                                               max_length=max_length, top_p=top_p, temperature=temperature):
-        yield response
+    def handle_device(self, precision, device):
+        if device == 'cpu':
+            pass
+        elif device == 'cuda':
+            import torch
+            if not (precision.startswith('fp16i') and torch.cuda.get_device_properties(0).total_memory < 1.4e+10):
+                self.model = self.model.cuda()
+        else:
+            print('Error: 不受支持的设备')
+            exit()
 
+    def handle_precision(self, precision, device):
+        if precision == 'fp16':
+            self.model = self.model.half()
+        elif precision == 'fp32':
+            self.model = self.model.float()
+        elif precision.startswith('fp16i'):
+            precision_bits = int(precision[5:])
+            self.model = self.model.quantize(precision_bits)
+            if device == 'cuda':
+                self.model = self.model.cuda()
+            self.model = self.model.half()
+        elif precision.startswith('fp32i'):
+            precision_bits = int(precision[5:])
+            self.model = self.model.quantize(precision_bits)
+            if device == 'cuda':
+                self.model = self.model.cuda()
+            self.model = self.model.float()
+        else:
+            print('Error: 不受支持的精度')
+            exit()
 
-def load_model():
-    global model, tokenizer
-    from transformers import AutoModel, AutoTokenizer
-    tokenizer = AutoTokenizer.from_pretrained(
-        settings.Path, local_files_only=True, trust_remote_code=True)
-    model = AutoModel.from_pretrained(
-        settings.Path, local_files_only=True, trust_remote_code=True)
-    if not (settings.Lora == '' or settings.Lora == None):
-        print('Lora模型地址', settings.Lora)
-        from peft import PeftModel
-        model = PeftModel.from_pretrained(model, settings.Lora)
-    device, precision = settings.Strategy.split()
-    # 根据设备执行不同的操作
-    if device == 'cpu':
-        # 如果是cpu，不做任何操作
-        pass
-    elif device == 'cuda':
-        # 如果是gpu，把模型移动到显卡
-        import torch
-        if not (precision.startswith('fp16i') and torch.cuda.get_device_properties(0).total_memory < 1.4e+10):
-            model = model.cuda()
-    else:
-        # 如果是其他设备，报错并退出程序
-        print('Error: 不受支持的设备')
-        exit()
-    # 根据精度执行不同的操作
-    if precision == 'fp16':
-        # 如果是fp16，把模型转化为半精度
-        model = model.half()
-    elif precision == 'fp32':
-        # 如果是fp32，把模型转化为全精度
-        model = model.float()
-    elif precision.startswith('fp16i'):
-        # 如果是fp16i开头，把模型转化为指定的精度
-        # 从字符串中提取精度的数字部分
-        bits = int(precision[5:])
-        # 调用quantize方法，传入精度参数
-        model = model.quantize(bits)
-        if device == 'cuda':
-            model = model.cuda()
-        model = model.half()
-    elif precision.startswith('fp32i'):
-        # 如果是fp32i开头，把模型转化为指定的精度
-        # 从字符串中提取精度的数字部分
-        bits = int(precision[5:])
-        # 调用quantize方法，传入精度参数
-        model = model.quantize(bits)
-        if device == 'cuda':
-            model = model.cuda()
-        model = model.float()
-    else:
-        # 如果是其他精度，报错并退出程序
-        print('Error: 不受支持的精度')
-        exit()
-    model = model.eval()
+    def chat(self, prompt, history_formatted, max_length, top_p, temperature, mix=False):
+        if mix:
+            search_results = find(prompt)
+            prompt = ' '.join([prompt] + [result['content'] for result in search_results])
+        for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
+                                                max_length=max_length, top_p=top_p, temperature=temperature):
+            yield response
