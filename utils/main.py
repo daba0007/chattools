@@ -93,6 +93,8 @@ with open('config.yaml', 'r') as f:
 setup_logger(app)
 utils.logger = app.logger
 
+utils.logger.info("设置成功")
+
 
 # Load Model
 load_LLM()
@@ -101,6 +103,3 @@ utils.mutex = threading.Lock()
 # Load Model
 thread_load_model = threading.Thread(target=load_model)
 thread_load_model.start()
-
-# Start
-print(utils.Green, "可以开始了", utils.White)
