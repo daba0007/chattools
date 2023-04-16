@@ -6,3 +6,4 @@ networkx
 #llama-cpp-python
 transformers==4.26.1
 Flask
+bs4
