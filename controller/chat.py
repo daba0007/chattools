@@ -38,7 +38,7 @@ def request_completions():
         with utils.mutex:
             yield "data: %s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(
-                "\033[1;32m"+IP+":\033[1;31m"+prompt+"\033[1;37m")
+                "\033[1;32mMessage:\033[1;31m"+prompt+"\033[1;37m")
             try:
                 for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
                     if (response_text):
