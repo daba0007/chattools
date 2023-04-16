@@ -44,14 +44,14 @@ def request_completions():
                         # yield "data: %s\n\n" %response_text
                         yield json.dumps({"response": response_text})
 
-                yield json.dumps({"response": response_text})
+                yield json.dumps({"response": "[DONE]"})
             except Exception as e:
                 error = str(e)
                 utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
                 response_text = ''
             torch.cuda.empty_cache()
         if response_text == '':
-            yield json.dumps({"response": (f"发生错误，正在重新加载模型{error}")})
+            yield json.dumps({"response": f"发生错误，正在重新加载模型{error}"})
     response = Response(stream_with_context(event_stream()), content_type="text/event-stream")
     response.headers['Connection'] = 'keep-alive'
     response.headers['Cache-Control'] = 'no-cache'

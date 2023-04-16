@@ -41,7 +41,9 @@
                 break;
             } else {
                 // 获取正常信息时，逐字追加输出
-                output.innerText += text;
+                let jsonString = text.replace(/[^a-zA-Z0-9{} [],":.]/g, '');
+                let msg = JSON.parse(jsonString)
+                output.innerText = msg.response;
             }
         }
     }
