@@ -3,7 +3,7 @@ from utils.base import ChatBot
 from utils import utils
 
 class LlamaChatBot(ChatBot):
-    def __init__(self, model):
+    def __init__(self, model=None):
         self.model = model
 
     def load_model(self):
