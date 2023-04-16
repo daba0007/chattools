@@ -22,3 +22,6 @@ fess:
   count: 5
 bing:
   count: 5
+weight:
+  bing: 1
+  fess: 9

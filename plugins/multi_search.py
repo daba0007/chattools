@@ -5,8 +5,8 @@ class MultiSearch:
     def __init__(self, weights):
         self.weights = weights
         self.searches = {
-            'BingSearch': BingSearch(),
-            'FessSearch': FessSearch()
+            'bing': BingSearch(),
+            'fess': FessSearch()
         }
 
     def find(self, keyword):

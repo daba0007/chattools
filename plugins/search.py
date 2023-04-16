@@ -5,7 +5,7 @@ from utils import utils
 
 
 if utils.Library_type == 'mix':
-    library = MultiSearch(utils.weights)
+    library = MultiSearch(utils.Weight)
 elif utils.Library_type == 'fess':
     library = FessSearch()
 elif utils.Library_type == 'bing':
