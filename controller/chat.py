@@ -37,8 +37,7 @@ def request_completions():
         #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
         with utils.mutex:
             yield "data: %s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
-            utils.logger.info(
-                "\033[1;32mMessage:\033[1;31m"+prompt+"\033[1;37m")
+            utils.logger.info("\033[1;32mMessage:\033[1;31m"+prompt+"\033[1;37m")
             try:
                 for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
                     if (response_text):
@@ -66,7 +65,7 @@ def get_request_params():
     max_length = data.get('max_tokens', 2048)
     top_p = data.get('top_p', 0.2)
     temperature = data.get('temperature', 0.8)
-    mix = data.get('mix', False)
+    mix = data.get('mix', True)
     messages = data.get('messages')
     prompt = messages[-1]['content']
     return max_length, top_p, temperature, mix, messages, prompt
