@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My HTML Page</title>
+  </head>
+  <body>
+    <h1>Hello World!</h1>
+    <p>This is a simple HTML page.</p>
+
+    <button id="myButton">Send</button>
+    <div id="output"></div>
+
+    <script>
+      const data = {
+        max_tokens: 2048,
+        top_p: 0.2,
+        temperature: 0.8,
+        mix: true,
+        messages: [{ role: "user", content: "请问你知道 Inhouse 吗" }],
+      };
+
+      const url = "https://xsre.workflow.sz.shopee.io/chat/completions";
+
+      const myButton = document.getElementById("myButton");
+      const output = document.getElementById("output");
+
+      myButton.addEventListener("click", () => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", url);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = () => {
+          if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+              console.log(xhr.responseText);
+              output.textContent = xhr.responseText;
+            } else {
+              console.error(`Request failed with status code ${xhr.status}`);
+            }
+          }
+        };
+        xhr.send(JSON.stringify(data));
+      });
+    </script>
+  </body>
+</html>

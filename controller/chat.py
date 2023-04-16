@@ -42,16 +42,16 @@ def request_completions():
                 for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
                     if (response_text):
                         # yield "data: %s\n\n" %response_text
-                        yield "data: %s\n\n" % json.dumps({"response": response_text})
+                        yield json.dumps({"response": response_text})
 
-                yield "data: %s\n\n" % "[DONE]"
+                yield json.dumps({"response": "[Done]"})
             except Exception as e:
                 error = str(e)
                 utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
                 response_text = ''
             torch.cuda.empty_cache()
         if response_text == '':
-            yield "data: %s\n\n" % json.dumps({"response": ("发生错误，正在重新加载模型"+error)})
+            yield json.dumps({"response": ("发生错误，正在重新加载模型"+error)})
     response = Response(event_stream(), mimetype="text/event-stream")
     response.headers['Connection'] = 'keep-alive'
     response.headers['Cache-Control'] = 'no-cache'
