@@ -36,26 +36,29 @@ def request_completions():
         #IP = request.environ.get(
         #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
         with utils.mutex:
-            yield json.dumps({"response": (str(len(prompt))+'字正在计算')})
+            #yield json.dumps({"response": (str(len(prompt))+'字正在计算')})
+            yield "data: %s\n\n" %json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
             try:
                 for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
                     if (response_text):
                         # yield "data: %s\n\n" %response_text
-                        yield json.dumps({"response": response_text})
-
-                yield json.dumps({"response": response_text})
+                        yield "data: %s\n\n" %json.dumps({"response": response_text})
+                        #yield json.dumps({"response": response_text})
+                yield "data: %s\n\n" %"[DONE]"
+                #yield json.dumps({"response": response_text})
             except Exception as e:
                 error = str(e)
                 utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
                 response_text = ''
             torch.cuda.empty_cache()
         if response_text == '':
-            yield json.dumps({"response": (f"发生错误，正在重新加载模型{error}")})
-    response = Response(event_stream(), mimetype="text/event-stream")
+            yield "data: %s\n\n" %json.dumps({"response": ("发生错误，正在重新加载模型"+error)})
+            #yield json.dumps({"response": (f"发生错误，正在重新加载模型{error}")})
+    response = Response(event_stream(), content_type="text/event-stream")
     response.headers['Connection'] = 'keep-alive'
     response.headers['Cache-Control'] = 'no-cache'
-    yield response
+    return response
 
 
 def get_request_params():
