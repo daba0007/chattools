@@ -3,7 +3,7 @@ from utils.base import BaseSearch
 from utils import utils
 import jieba
 
-with open("stopwords_txt", encoding="utf-8") as f:
+with open("plugins/stopword.txt", encoding="utf-8") as f:
     stopwords = f.read().split('\n')
 
 
