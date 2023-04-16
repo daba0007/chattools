@@ -21,8 +21,8 @@ class BingSearch(BaseSearch):
                     content = result.find('div', class_='b_caption').find('p').text
                     search_results.append({'title': "["+title+"]("+link+")", 'content': content})
                 except Exception as e:
-                    print(f"解析搜索结果时发生错误: {e}")
+                    utils.logger.error(f"解析搜索结果时发生错误: {e}")
             return search_results[:min(int(utils.Bing["count"]), len(search_results))]
         except Exception as e:
-            print(f"Bing 搜索发生错误: {e}")
+            utils.logger.error(f"Bing 搜索发生错误: {e}")
             return []
