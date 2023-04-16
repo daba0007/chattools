@@ -11,6 +11,7 @@ response = requests.post(url, headers=headers, json=data, stream=True)
 if response.status_code == 200:
   # Extract the generated text from the response
   for line in response.iter_lines():
+        print(line)
         data = json.loads(line.decode("utf-8"))
         response_text = data["response"]
         print(response_text)

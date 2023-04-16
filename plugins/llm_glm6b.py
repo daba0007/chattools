@@ -32,7 +32,7 @@ class Glm6BChatBot(ChatBot):
         if not (utils.Lora == '' or utils.Lora == None):
             print('Lora模型地址', utils.Lora)
             from peft import PeftModel
-            self.model = PeftModel.from_pretrained(self.model, utils.Lora)
+            self.model = PeftModel.from_pretrained(utils.Lora, local_files_only=True, trust_remote_code=True)
 
         device, precision = utils.GLM["strategy"].split()
         self.handle_device(precision, device)

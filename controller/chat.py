@@ -36,7 +36,7 @@ def request_completions():
         #IP = request.environ.get(
         #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
         with utils.mutex:
-            yield "data: %s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
+            yield json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
             try:
                 for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
