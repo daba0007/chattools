@@ -7,7 +7,6 @@ mutex = None
 User = dict()
 logger = None
 LLM_Type = ""
-Library_type = ""
 Tokenizer = None
 Model = None
 Library = None
