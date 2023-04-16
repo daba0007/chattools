@@ -37,7 +37,7 @@ def request_completions():
         #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
         with utils.mutex:
             yield "data: %s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
-            utils.logger.info("\033[1;32mMessage:\033[1;31m"+prompt+"\033[1;37m")
+            utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
             try:
                 for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
                     if (response_text):
@@ -47,7 +47,7 @@ def request_completions():
                 yield "data: %s\n\n" % "[DONE]"
             except Exception as e:
                 error = str(e)
-                utils.logger.error("错误", utils.Red, error, utils.White)
+                utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
                 response_text = ''
             torch.cuda.empty_cache()
         if response_text == '':

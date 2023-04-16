@@ -93,8 +93,6 @@ with open('config.yaml', 'r') as f:
 setup_logger(app)
 utils.logger = app.logger
 
-utils.logger.info("设置成功")
-
 
 # Load Model
 load_LLM()
