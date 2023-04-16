@@ -33,8 +33,8 @@ def request_completions():
         error = ''
         response_text = ''
         # 获取 用户信息
-        IP = request.environ.get(
-            'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
+        #IP = request.environ.get(
+        #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
         with utils.mutex:
             yield "data: %s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(
