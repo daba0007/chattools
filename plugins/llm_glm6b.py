@@ -3,7 +3,7 @@ from utils.base import ChatBot
 from utils import utils
 
 class Glm6BChatBot(ChatBot):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer=None):
         super().__init__(model)
         self.tokenizer = tokenizer
         
@@ -78,3 +78,5 @@ class Glm6BChatBot(ChatBot):
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature):
             yield response
+            
+model = Glm6BChatBot()

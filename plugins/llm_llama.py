@@ -37,3 +37,5 @@ class LlamaChatBot(ChatBot):
         for output in stream:
             text += output["choices"][0]["text"]
             yield text
+            
+model = LlamaChatBot()
