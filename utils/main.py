@@ -6,9 +6,12 @@ import threading
 import torch
 from utils import utils
 import yaml
+from flask_cors import CORS
 
 # SingleTon
 app = Flask(__name__)
+
+CORS(app, supports_credentials=True)
 
 
 def setup_logger(app):
@@ -47,7 +50,7 @@ def setup_logger(app):
 def load_LLM():
     try:
         from importlib import import_module
-        utils.Model  = import_module(f'plugins.llm_{utils.LLM_Type}').model
+        utils.Model = import_module(f'plugins.llm_{utils.LLM_Type}').model
     except Exception as e:
         print(f"LLM模型加载失败:{e}")
 
