@@ -29,33 +29,40 @@ def request_completions():
     # 初始化聊天模型
     history_formatted = utils.Model.chat_init(messages)
 
-    def event_stream():
-        error = ''
-        response_text = ''
-        # 获取 用户信息
-        #IP = request.environ.get(
-        #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
-        with utils.mutex:
-            yield json.dumps({"response": (str(len(prompt))+'字正在计算')})
-            utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
-            try:
-                for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
-                    if (response_text):
-                        # yield "data: %s\n\n" %response_text
-                        yield json.dumps({"response": response_text})
-
-                yield json.dumps({"response": response_text})
-            except Exception as e:
-                error = str(e)
-                utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
-                response_text = ''
-            torch.cuda.empty_cache()
-        if response_text == '':
-            yield json.dumps({"response": (f"发生错误，正在重新加载模型{error}")})
-    response = Response(event_stream(), mimetype="text/event-stream")
-    response.headers['Connection'] = 'keep-alive'
-    response.headers['Cache-Control'] = 'no-cache'
-    return response
+    
+    error = ''
+    response_text = ''
+    # 获取 用户信息
+    #IP = request.environ.get(
+    #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
+    with utils.mutex:
+        res = json.dumps({"response": json.dumps({"response": (str(len(prompt))+'字正在计算')})})
+        res.headers['Connection'] = 'keep-alive'
+        res.headers['Cache-Control'] = 'no-cache'
+        yield Response(res, mimetype="text/event-stream")
+        utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
+        try:
+            for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
+                if (response_text):
+                    # yield "data: %s\n\n" %response_text
+                    res = json.dumps({"response": response_text})
+                    res.headers['Connection'] = 'keep-alive'
+                    res.headers['Cache-Control'] = 'no-cache'
+                    yield Response(res, mimetype="text/event-stream")
+            res = json.dumps({"response": "[Done]"})
+            res.headers['Connection'] = 'keep-alive'
+            res.headers['Cache-Control'] = 'no-cache'
+            yield Response(res, mimetype="text/event-stream")
+        except Exception as e:
+            error = str(e)
+            utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
+            response_text = ''
+        torch.cuda.empty_cache()
+    if response_text == '':
+        res = json.dumps({"response": (f"发生错误，正在重新加载模型{error}")})
+        res.headers['Connection'] = 'keep-alive'
+        res.headers['Cache-Control'] = 'no-cache'
+        yield Response(res, mimetype="text/event-stream")
 
 
 def get_request_params():
