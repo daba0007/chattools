@@ -1,22 +1,34 @@
 import re
-from plugins.textrank4zh import TextRank4Keyword
 from utils.base import BaseSearch
 from utils import utils
+import jieba
+
+with open("plugins/stopwords_txt",encoding = "utf-8") as f:
+    stopwords=f.read().split('\n')
 
 class FessSearch(BaseSearch):
     def __init__(self):
         super().__init__()
-        self.tr4w = TextRank4Keyword()
 
     def replace_strong(self, s):
         s = re.sub(r'<strong>', "", s)
         s = re.sub(r'</strong>', "", s)
         return s
+    
+    def remove_stopwords(self, search_query):
+        search_query_without_stopwords=[]
+        for i in search_query:
+            try:
+                stopwords.index(i)
+            except:
+                search_query_without_stopwords.append(i)
+        return search_query_without_stopwords
 
     def find(self, search_query):
         try:
-            self.tr4w.analyze(text=search_query, lower=True, window=2) 
-            search_query = ' '.join([i['word'] for i in self.tr4w.get_keywords(20, word_min_len=1)])
+            search_query=jieba.cut(search_query)
+            search_query=self.remove_stopwords(search_query)
+            search_query=" ".join(search_query)
             utils.logger.info(f"关键词: {search_query}")
             fess_path = utils.Fess["path"]
             url = f"http://{fess_path}/json/?q={search_query}&num=10&sort=score.desc&lang=zh_CN"
@@ -28,3 +40,5 @@ class FessSearch(BaseSearch):
         except Exception as e:
             utils.logger.error(f"fess读取失败:{e}")
             return []
+        
+fess_search = FessSearch()

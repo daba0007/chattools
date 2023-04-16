@@ -1,12 +1,12 @@
-from plugins.bing_search import BingSearch
-from plugins.fess_search import FessSearch
+from plugins.bing_search import bing_search
+from plugins.fess_search import fess_search
 
 class MultiSearch:
     def __init__(self, weights):
         self.weights = weights
         self.searches = {
-            'bing': BingSearch(),
-            'fess': FessSearch()
+            'bing': bing_search,
+            'fess': fess_search
         }
 
     def find(self, keyword):

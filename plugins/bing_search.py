@@ -26,3 +26,5 @@ class BingSearch(BaseSearch):
         except Exception as e:
             utils.logger.error(f"Bing 搜索发生错误: {e}")
             return []
+
+bing_search = BingSearch()
