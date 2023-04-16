@@ -23,5 +23,6 @@ fess:
 bing:
   count: 5
 weight:
+# 消息采集比重
   bing: 1
   fess: 9
