@@ -6,9 +6,12 @@ import threading
 import torch
 from utils import utils
 import yaml
+from flask_cors import CORS
 
 # SingleTon
 app = Flask(__name__)
+
+CORS(app, supports_credentials=True)
 
 
 def setup_logger(app):
@@ -47,26 +50,18 @@ def setup_logger(app):
 def load_LLM():
     try:
         from importlib import import_module
-        utils.Model = import_module(f'plugins.llm_{utils.LLM_Type}')
+        utils.Model = import_module(f'plugins.llm_{utils.LLM_Type}').model
     except Exception as e:
         print(f"LLM模型加载失败:{e}")
 
 
 def load_model():
-    mutex.acquire()
+    utils.mutex.acquire()
     utils.Model.load_model()
-    mutex.release()
+    utils.mutex.release()
     torch.cuda.empty_cache()
     print(utils.Green, "模型加载完成", utils.White)
 
-
-def load_library():
-    try:
-        from importlib import import_module
-        utils.Library = import_module(f'plugins.{utils.Library_type}_search')
-        print(utils.Green, "知识库加载完成", utils.White)
-    except Exception as e:
-        print(f"知识库加载失败: {e}")
 
 def setting(config):
     """
@@ -90,7 +85,9 @@ def setting(config):
         raise ValueError(f'Missing key in config: {e}')
 
     if not isinstance(utils.LLM_Type, str):
-        raise TypeError(f'LLM_Type must be a string, got {type(utils.LLM_Type)}')
+        raise TypeError(
+            f'LLM_Type must be a string, got {type(utils.LLM_Type)}')
+
 
 # 读取环境变量
 with open('config.yaml', 'r') as f:
@@ -107,7 +104,3 @@ utils.mutex = threading.Lock()
 # Load Model
 thread_load_model = threading.Thread(target=load_model)
 thread_load_model.start()
-
-# Load Library
-thread_load_library = threading.Thread(target=load_library)
-thread_load_library.start()

@@ -1,9 +1,9 @@
-from search import find
+from plugins.search import find
 from utils.base import ChatBot
 from utils import utils
 
 class Glm6BChatBot(ChatBot):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model=None, tokenizer=None):
         super().__init__(model)
         self.tokenizer = tokenizer
         
@@ -32,7 +32,7 @@ class Glm6BChatBot(ChatBot):
         if not (utils.Lora == '' or utils.Lora == None):
             print('Lora模型地址', utils.Lora)
             from peft import PeftModel
-            self.model = PeftModel.from_pretrained(self.model, utils.Lora)
+            self.model = PeftModel.from_pretrained(utils.Lora, local_files_only=True, trust_remote_code=True)
 
         device, precision = utils.GLM["strategy"].split()
         self.handle_device(precision, device)
@@ -71,10 +71,11 @@ class Glm6BChatBot(ChatBot):
             print('Error: 不受支持的精度')
             exit()
 
-    def chat(self, prompt, history_formatted, max_length, top_p, temperature, mix=False):
-        if mix:
-            search_results = find(prompt)
-            prompt = ' '.join([prompt] + [result['content'] for result in search_results])
+    def chat(self, prompt, history_formatted, max_length, top_p, temperature, library="mix"):
+        search_results = find(prompt, library)
+        prompt = ' '.join([prompt] + [result['content'] for result in search_results])
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature):
             yield response
+            
+model = Glm6BChatBot()

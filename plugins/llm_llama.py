@@ -1,9 +1,9 @@
-from search import find
+from plugins.search import find
 from utils.base import ChatBot
 from utils import utils
 
 class LlamaChatBot(ChatBot):
-    def __init__(self, model):
+    def __init__(self, model=None):
         self.model = model
 
     def load_model(self):
@@ -25,7 +25,7 @@ class LlamaChatBot(ChatBot):
 
     def chat(self, prompt, history_formatted, max_length, top_p, temperature, mix=False):
         if mix:
-            search_results = find(prompt)
+            search_results = find(prompt, mix)
             prompt = ' '.join([prompt] + [result['content'] for result in search_results])
             prompt = history_formatted+"%s\nAssistant: " % prompt
         else:
@@ -37,3 +37,5 @@ class LlamaChatBot(ChatBot):
         for output in stream:
             text += output["choices"][0]["text"]
             yield text
+            
+model = LlamaChatBot()

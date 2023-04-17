@@ -1,18 +1,13 @@
-from bing_search import BingSearch
-from fess_search import FessSearch
-from multi_search import MultiSearch
+from plugins.bing_search import bing_search
+from plugins.multi_search import MultiSearch
+from plugins.fess_search import fess_search
 from utils import utils
 
+search_functions = {
+    'mix': MultiSearch(utils.Weight).find,
+    'bing': bing_search.find,
+    'fess': fess_search.find
+}
 
-if utils.Library_type == 'mix':
-    library = MultiSearch(utils.weights)
-elif utils.Library_type == 'fess':
-    library = FessSearch()
-elif utils.Library_type == 'bing':
-    library = BingSearch()
-else:
-    raise ValueError(f"Invalid search type: {utils.Library_type}")
-
-def find(prompt):
-	return library.find(prompt)
- 
+def find(prompt, library='mix'):
+    return search_functions[library](prompt)

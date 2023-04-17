@@ -1,4 +1,4 @@
-from flask import Blueprint, request, Response, abort
+from flask import Blueprint, request, Response, abort, stream_with_context
 import torch
 import json
 import os
@@ -25,7 +25,7 @@ def request_completions():
         一个事件流，包含聊天响应。每个事件都是一个 JSON 对象，包含以下字段：
         - response: 一个字符串，表示聊天模型的响应文本。
     """
-    max_length, top_p, temperature, mix, messages, prompt = get_request_params()
+    max_length, top_p, temperature, library, messages, prompt = get_request_params()
     # 初始化聊天模型
     history_formatted = utils.Model.chat_init(messages)
 
@@ -33,27 +33,26 @@ def request_completions():
         error = ''
         response_text = ''
         # 获取 用户信息
-        IP = request.environ.get(
-            'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
+        #IP = request.environ.get(
+        #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
         with utils.mutex:
-            yield "data: %s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
-            utils.logger.info(
-                "\033[1;32m"+IP+":\033[1;31m"+prompt+"\033[1;37m")
+            yield "%s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
+            utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
             try:
-                for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
+                for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, library):
                     if (response_text):
                         # yield "data: %s\n\n" %response_text
-                        yield "data: %s\n\n" % json.dumps({"response": response_text})
+                        yield "%s\n\n" % json.dumps({"response": response_text})
 
-                yield "data: %s\n\n" % "[DONE]"
+                yield "%s\n\n" % json.dumps({"response": "[DONE]"})
             except Exception as e:
                 error = str(e)
-                utils.logger.error("错误", utils.Red, error, utils.White)
+                utils.logger.error(f"错误{utils.Red}{error}{utils.White}")
                 response_text = ''
             torch.cuda.empty_cache()
         if response_text == '':
-            yield "data: %s\n\n" % json.dumps({"response": ("发生错误，正在重新加载模型"+error)})
-    response = Response(event_stream(), mimetype="text/event-stream")
+            yield "%s\n\n" % json.dumps({"response": f"发生错误，正在重新加载模型{error}"})
+    response = Response(stream_with_context(event_stream()), content_type="text/event-stream")
     response.headers['Connection'] = 'keep-alive'
     response.headers['Cache-Control'] = 'no-cache'
     return response
@@ -66,7 +65,7 @@ def get_request_params():
     max_length = data.get('max_tokens', 2048)
     top_p = data.get('top_p', 0.2)
     temperature = data.get('temperature', 0.8)
-    mix = data.get('mix', False)
+    library = data.get('library', 'mix')
     messages = data.get('messages')
     prompt = messages[-1]['content']
-    return max_length, top_p, temperature, mix, messages, prompt
+    return max_length, top_p, temperature, library, messages, prompt
