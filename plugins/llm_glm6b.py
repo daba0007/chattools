@@ -74,6 +74,7 @@ class Glm6BChatBot(ChatBot):
     def chat(self, prompt, history_formatted, max_length, top_p, temperature, library="mix"):
         search_results = find(prompt, library)
         prompt = ' '.join([prompt] + [result['content'] for result in search_results])
+        prompt = "请用少于 100 字以内回答: " + prompt
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature):
             yield response
