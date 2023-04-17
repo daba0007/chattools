@@ -6,7 +6,7 @@ headers = {
   "Content-Type": "application/json",
   "Accept": "text/event-stream"
 }
-url = "https://xsre.workflow.sz.shopee.io/chat/completions"
+url = "/chat/completions"
 response = requests.post(url, headers=headers, json=data, stream=True)
 # Check if the request was successful
 if response.status_code == 200:
