@@ -15,8 +15,20 @@
         output.innerText = "";
         const url = "https://xsre.workflow.sz.shopee.io/chat/completions";
         const data = {"max_tokens": 2048, "top_p": 0.2, "temperature": 0.8, "mix":true, "messages": [{"role":"user", "content":input}]};
-        //直接获取 Fetch 的response， 无法使用 await的话， Promise的方式也是可以的。
-        const response = await fetch(url, {
+        const eventSource = new EventSource('https://xsre.workflow.sz.shopee.io/chat/completions');
+        fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.text())
+        .then(text => {
+            const decodedText = decodeURIComponent(escape(text));
+            output.innerText = decodedText;
+        });
+        /* const response = await fetch(url, {
             method: "POST",
             body: JSON.stringify(data),
             headers: {
@@ -45,7 +57,7 @@
                 let msg = JSON.parse(jsonString)
                 output.innerText = msg.response;
             }
-        }
+        } */
     }
     </script>
 </body>
