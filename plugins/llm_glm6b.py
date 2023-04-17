@@ -71,10 +71,9 @@ class Glm6BChatBot(ChatBot):
             print('Error: 不受支持的精度')
             exit()
 
-    def chat(self, prompt, history_formatted, max_length, top_p, temperature, mix=False):
-        if mix:
-            search_results = find(prompt, mix)
-            prompt = ' '.join([prompt] + [result['content'] for result in search_results])
+    def chat(self, prompt, history_formatted, max_length, top_p, temperature, library="mix"):
+        search_results = find(prompt, library)
+        prompt = ' '.join([prompt] + [result['content'] for result in search_results])
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature):
             yield response

@@ -25,7 +25,7 @@ def request_completions():
         一个事件流，包含聊天响应。每个事件都是一个 JSON 对象，包含以下字段：
         - response: 一个字符串，表示聊天模型的响应文本。
     """
-    max_length, top_p, temperature, mix, messages, prompt = get_request_params()
+    max_length, top_p, temperature, library, messages, prompt = get_request_params()
     # 初始化聊天模型
     history_formatted = utils.Model.chat_init(messages)
 
@@ -39,7 +39,7 @@ def request_completions():
             yield "%s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
             try:
-                for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, mix=mix):
+                for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, library):
                     if (response_text):
                         # yield "data: %s\n\n" %response_text
                         yield "%s\n\n" % json.dumps({"response": response_text})
@@ -65,7 +65,7 @@ def get_request_params():
     max_length = data.get('max_tokens', 2048)
     top_p = data.get('top_p', 0.2)
     temperature = data.get('temperature', 0.8)
-    mix = data.get('mix', True)
+    library = data.get('library', 'mix')
     messages = data.get('messages')
     prompt = messages[-1]['content']
-    return max_length, top_p, temperature, mix, messages, prompt
+    return max_length, top_p, temperature, library, messages, prompt

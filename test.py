@@ -1,7 +1,7 @@
 import requests
 import json
 
-data = {"max_tokens": 2048, "top_p": 0.2, "temperature": 0.8, "mix":True, "messages": [{"role":"user", "content":"你好"}]}
+data = {"max_tokens": 2048, "top_p": 0.2, "temperature": 0.8, "library":"fess", "messages": [{"role":"user", "content":"如何使用监控平台"}]}
 headers = {
   "Content-Type": "application/json",
   "Accept": "text/event-stream"
@@ -15,7 +15,6 @@ if response.status_code == 200:
   previous_response = ''
   for line in response.iter_lines():
     if line:
-      print(line)
       data = json.loads(line.decode("utf-8"))
       current_response = data['response']
       if current_response == "[DONE]":
