@@ -1,12 +1,12 @@
 import requests
 import json
 
-data = {"max_tokens": 2048, "top_p": 0.2, "temperature": 0.8, "library":"fess", "messages": [{"role":"user", "content":"如何使用监控平台"}]}
+data = {"max_tokens": 2048, "top_p": 0.2, "temperature": 0.8, "library":"fess", "messages": [{"role":"user", "content":"如何使用 blackbox 进行拨测"}]}
 headers = {
   "Content-Type": "application/json",
   "Accept": "text/event-stream"
 }
-url = "/chat/completions"
+url = "https://xsre.workflow.sz.shopee.io/chat/completions"
 response = requests.post(url, headers=headers, json=data, stream=True)
 # Check if the request was successful
 if response.status_code == 200:
