@@ -91,26 +91,16 @@ class Glm6BChatBot(LLM):
             exit()
 
     def handle_precision(self, precision, device):
-        import torch
+        print(precision)
         if precision == 'fp16':
             self.model = self.model.half()
         elif precision == 'fp32':
-            self.model = self.model.float()
-        elif precision.startswith('fp16i'):
-            precision_bits = int(precision[5:])
-            self.model = self.model.quantize(precision_bits)
-            if device == 'cuda':
-                self.model = self.model.cuda()
             self.model = self.model.half()
-        elif precision.startswith('fp32i'):
-            precision_bits = int(precision[5:])
-            self.model = self.model.quantize(precision_bits)
-            if device == 'cuda':
-                self.model = self.model.cuda()
-            self.model = self.model.float()
         else:
             print('Error: 不受支持的精度')
             exit()
+        if device == 'cuda':
+            self.model = self.model.cuda()
 
     def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix"):
         search_results = find(prompt, library)
