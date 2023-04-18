@@ -61,6 +61,8 @@ def load_model():
     utils.mutex.release()
     torch.cuda.empty_cache()
     print(utils.Green, "模型加载完成", utils.White)
+    text = "你好,介绍下自己"
+    utils.Model(text)
 
 
 def setting(config):
@@ -104,6 +106,3 @@ utils.mutex = threading.Lock()
 # Load Model
 thread_load_model = threading.Thread(target=load_model)
 thread_load_model.start()
-
-text = "你好,介绍下自己"
-utils.Model(text)
