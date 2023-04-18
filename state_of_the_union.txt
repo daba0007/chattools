@@ -1,0 +1,125 @@
+一、背景
+单机房部署风险
+当前CS整个项目部署在SG8机房，存在单机房单AZ可用区部署风险，假如机房故障or可用区故障，将影响整个cs应用服务；
+
+例子:  2023年02月08日, 由于 sg10 机房被误删除, 导致:
+非shopee租户如shopeepay的服务cschannel服务无法访问
+chatbot的chatbotcommon set服务受影响
+csportal受cdn服务影响，无法访问
+CS casetracker受影响
+ 其故障时间长达111min, 事故文档: https://confluence.shopee.io/pages/viewpage.action?spaceKey=SPDEV&title=SPI-230208-02 
+
+假设当 SG8 IDC 出现故障,  CS 核心服务均部署于 SG8 IDC 之上, 故障会造成 CS 服务整体不可用.而在另一个机房重新部署一套 CS 服务至少耗费 3-4 个小时,且服务未经过流量及切换演练,风险极高.
+IDC 满足不同 AZ
+目前, sg10的 IDC 位于 ap-sg-1-general-c 的 AZ , sg8 的 IDC 位于 ap-sg-1-general-a 的 AZ. 如果服务可以分别部署在这两个 IDC,当其中一个 IDC 出现故障时(网络,服务等等), 另一个 IDC 的服务可以依旧承接用户流量,保证用户的正常访问
+
+
+DNS 配置
+目前Shopee的 Public DNS 解析基于 AWS Route 53的方案,可以对域名解析进行权重配置. 因此, 通过对域名解析的权重调整,我们可以满足用户按不同比例访问不同机房
+
+
+健康检查及自动切换
+在 Public DNS中, 当服务部署在多个 IDC 的时候, DNS 配置支持使用 TCP 协议配置DNS健康检查, 以检查服务的健康状况,并仅使用健康记录响应 DNS 查询.默认当少于18%的健康检查器报告端点健康,DNS 认为它不健康,并将全部流量分配到健康的断点上, 可参考 https://confluence.shopee.io/display/STS/%5BDNS%5D+Configuring+DNS+failover 
+
+二、方案
+
+基于以上背景,  SRE可以对目前 Inhouse 域名进行配置, 使得日常流量平均分布于 sg8, sg10两个 IDC.  当其中一个机房出现故障时,依赖 DNS 的健康检查能力及自动切换能力 对流量迅速进行切换, 保证用户的可用性,实现了同地双活.
+
+
+
+用户到 SG 机房
+用户到 SG 机房的域名解析将通过Weight routing 的路由策略实现流量权重分配,将流量按权重分配到 sg8和 sg10 机房. 以上能力由 AWS Route 53支持,具体可参考 https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-weighted.html 
+
+流量通过 DNS 解析到达 IDC 后,会到达 SGW 提供的 Nginx 集群, 该集群由 Shopee SGW 团队维护和支持, 提供七层流量负载的能力.请求到达 SGW 之后,将由 Nginx 进行识别和解析,将请求打到后端服务.
+
+当前流量
+
+
+
+切换后
+
+
+
+外网 NG 到服务
+服务通过外网 NG 后,根据 Nginx 进行解析,然后将请求打到后端服务.对于 CS 来说, 请求会先打到 CS Gateway, 再由 CS Gateway 对内网域名进行请求.
+
+内网域名可以基于IDC 进行识别,对于 SG8 机房的请求,则服务发现到 sg8 机房的服务,对于 SG10 机房的请求,则服务发现到 sg10 机房.因此可以保证请求落到对应的机房服务上
+
+
+三、设计
+以下以 cs.shopee.sg -> csgateway-main -> api.cs.shopee.io 为例子进行设计
+外网通过 Weight Routing 实现双活
+用户侧的请求在 DNS解析的阶段就会根据权重进行比例分配,让一部分用户请求到 sg8 机房(xz14z3fs.nlb.sgw.shopeemobile.com cs专用 sg8SGW) , 另一部分用户请求到 sg10 机房(dyxep7v0.nlb.sgw.shopee.io cs 专用 SG10SGW)
+
+
+
+保证外网进来的请求均位于同一机房
+为了保证外网进来的请求均位于同一机房, 首先会在 sg8 和 sg10 均部署 csgateway.流量进入外网域名后,根据 Nginx 解析将流量打入 csgateway,之后由 csgateway 做规则匹配和流量分发.
+
+
+
+在内网域名的 dns 解析中,根据 IDC 进行路由解析, sg8 IDC中的请求会定向发送到 sg8 的内网 SGW, sg10 IDC 中的请求也是定向发送到 sg10 的内网 SGW, 即, sg8的 csgateway-main 发出的请求会去请求 sg8 的内网 SGW, sg10的 csgateway-main 发出的请求会去请求 sg10 的内网 SGW
+
+
+
+在内网 SGW 中,SGW 会服务发现到本机房的服务,从而最终将流量发送到服务上.
+
+
+健康检查及自动切换
+SRE 配置健康检查后, 会对cs.shopee.sg的443端口进行健康检查. 
+
+必须能够在十秒内与端点建立 TCP 连接,否则视为不健康
+如果 18% 或更少的运行状况检查程序报告端点运行状况良好，则 Route 53 将认为它运行状况不佳。
+当发现某个解析不健康时(少于18%的健康检查器报告端点健康), 将所有的节点请求都转移到健康的节点.
+
+
+具体可以参考: https://docs.aws.amazon.com/zh_cn/Route53/latest/DeveloperGuide/dns-failover-determining-health-of-endpoints.html 
+
+正常情况下
+
+
+sg8故障:
+
+
+
+sg8 和 sg10均故障:
+
+
+
+
+四、问题点
+数据层不做双活
+本次只考虑应用层和接入层的双活方案. 目前 CS 的 DB (sg set) 存在于 SG10 机房,如果SG10 机房故障,且 DBA 团队无法保证故障期间的 DB 的连通性, 可能会导致 DB 无法连接的情况, 此时即使是保证了CS服务的可达,仍然无法保证服务的可用性.
+内网请求
+
+对于内网的请求,比如 sg8 机房的其他服务通过内网域名 api.cs.shopee.io 来请求 cs
+的服务, 当sg8 出现故障时,虽然此时http 的流量已经全部切到sg10 机房,但是相同机房的请求依旧会落到相同机房,此时:
+sg8 机房的请求依然会落到 sg8 而非健康的 sg10
+如果存在默认路由, 且默认路由也设置为 sg8, 则除 sg10 外其他对内网的请求均会落到 sg8
+
+这要求 SRE 手动去修改域名解析,保证在内网的请求均能落到健康的 sg10 上
+
+Spex 请求
+对于 Spex 的请求, 只有 Spex 探测到服务存活时,就允许流量请求到服务上.因此,当sg8 故障出现时,虽然外网 http 请求已经都落到 sg10 机房,但是由于 sg8的容器依然存活,此时依旧会允许 SPEX 请求落到 sg8 的服务上.
+需要服务提供开关, 实现关闭机房 SPEX 流量
+
+单实例服务
+对于部分服务要求只能单实例部署, 需要整理出来, 在每次部署时会更新版本, 当故障发生时, 如果故障 IDC 服务不可用,可以通过调整实例数的方式启动这些服务(0->1).
+
+健康检查
+
+由于健康检查只针对 TCP 协议,如果能 sgw 的 TCP 端口(即 80, 443)可以建立连接,则认为是健康,而没有考虑到应用层的健康情况,如请求不可用,请求 5xx 等等.这意味着,该健康检查及自动切换只能针对有限的场景, 即该 IDC 的 sgw 不可用或丢失的场景.
+当单 IDC的其他类型的故障发生时, SGW 提供的健康检查及自动切换方案无法覆盖,需要由 SRE 手动进行切换.SRE 会删除调整权重保证所有流量落到健康的机房,但是依赖于 DNS 的解析,由于DNS 存在变更时间及缓存等情况,实际生效时间并不是特别及时.但双活的方案依旧最大程度的提供了冗余, 在故障发生期间,双活的部署提供了切换的保障.
+
+
+五、操作步骤
+
+SRE 调整发版配置,在 sg8 和 sg10 均部署服务(此时 sg10 的服务会接受到 spex 的请求,需要确认这一点是否可以部署), 对于只允许单实例部署的服务,需要整理并将 sg10 机房的实例数调整为 0
+提供实时的实例查询方式,保证可以查询到节点的实例数
+找到方式确认这些服务是否还在运行(可能只是查询不到但实例还在运行)
+整理需要调整的内网域名,保证以下三个解析, 这些解析需要有实时的查询方式, 保证在故障期间可以把握流量走向
+sg8: 请求打到 sg8 alb zdyfzt5w.nlb.sgw.shopee.io
+sg10:  请求打到 sg10 alb  dyxep7v0.nlb.sgw.shopee.io
+central: 默认打到 sg8 alb zdyfzt5w.nlb.sgw.shopee.io
+SRE 灰度外网域名进行测试
+SRE 调整流量比例,最终实现 sg8 和 sg10 各承载 50%的流量
