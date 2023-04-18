@@ -91,11 +91,10 @@ class Glm6BChatBot(LLM):
             exit()
 
     def handle_precision(self, precision, device):
-        print(precision)
         if precision == 'fp16':
             self.model = self.model.half()
         elif precision == 'fp32':
-            self.model = self.model.half()
+            self.model = self.model.float()
         else:
             print('Error: 不受支持的精度')
             exit()
