@@ -65,7 +65,8 @@ def load_model():
     one_input_prompt = PromptTemplate(input_variables=["device", "precision"], template="模型加载完成\n设备: {device} \n 精度: {precision}")
     device, precision = utils.GLM["strategy"].split()
     one_input_prompt.format(device=device, precision=precision)
-    llm_result = utils.Model(one_input_prompt)
+    print(one_input_prompt)
+    llm_result = utils.Model.generate(one_input_prompt)
     print(llm_result)
 
 
