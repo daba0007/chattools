@@ -32,7 +32,7 @@ class FessSearch(BaseSearch):
             search_query = " ".join(search_query)
             utils.logger.info(f"关键词: {search_query}")
             fess_path = utils.Fess["path"]
-            url = f"http://{fess_path}/json/?q={search_query}&num=10&sort=score.desc&lang=zh_CN"
+            url = f"{fess_path}/json/?q={search_query}&num=10&sort=score.desc&lang=zh_CN"
             res = self.session.get(
                 url, headers=self.headers, proxies=self.proxies)
             r = res.json()

@@ -2,3 +2,6 @@ __pycache__
 .idea
 .vscode
 *.log
+config.yaml
+/models/
+test.py

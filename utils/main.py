@@ -66,6 +66,7 @@ def load_model():
     device, precision = utils.GLM["strategy"].split()
     one_input_prompt.format(device=device, precision=precision)
     llm_result = utils.Model(one_input_prompt)
+    print(llm_result)
 
 
 def setting(config):
@@ -104,8 +105,9 @@ utils.logger = app.logger
 
 # Load Model
 load_LLM()
-utils.mutex = threading.Lock()
+utils.Model.load_model()
+""" utils.mutex = threading.Lock()
 
 # Load Model
 thread_load_model = threading.Thread(target=load_model)
-thread_load_model.start()
+thread_load_model.start() """
