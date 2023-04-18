@@ -105,9 +105,8 @@ utils.logger = app.logger
 
 # Load Model
 load_LLM()
-utils.Model.load_model()
-""" utils.mutex = threading.Lock()
+utils.mutex = threading.Lock()
 
 # Load Model
 thread_load_model = threading.Thread(target=load_model)
-thread_load_model.start() """
+thread_load_model.start()
