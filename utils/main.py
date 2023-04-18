@@ -65,44 +65,12 @@ def load_model():
     response = utils.Model(text)
     print("输入: 你好,介绍下自己")
     print(f"输出{response}")
-    from langchain import PromptTemplate, FewShotPromptTemplate
-    # First, create the list of few shot examples.
-    examples = [
-        {"word": "开心", "antonym": "难过"},
-        {"word": "长", "antonym": "短"},
-    ]
-
-    # Next, we specify the template to format the examples we have provided.
-    # We use the `PromptTemplate` class for this.
-    example_formatter_template = """
-    单词: {word}
-    反义词: {antonym}\n
-    """
-    example_prompt = PromptTemplate(
-        input_variables=["word", "antonym"],
-        template=example_formatter_template,
+    from langchain.document_loaders import GoogleDriveLoader
+    loader = GoogleDriveLoader(
+        folder_id="1yucgL9WGgWZdM1TOuKkeghlPizuzMYb5",
+        credentials_path='credentials.json', token_path='token.json',
+        recursive=False
     )
-
-    # Finally, we create the `FewShotPromptTemplate` object.
-    few_shot_prompt = FewShotPromptTemplate(
-        # These are the examples we want to insert into the prompt.
-        examples=examples,
-        # This is how we want to format the examples when we insert them into the prompt.
-        example_prompt=example_prompt,
-        # The prefix is some text that goes before the examples in the prompt.
-        # Usually, this consists of intructions.
-        prefix="针对输入写出反义词",
-        # The suffix is some text that goes after the examples in the prompt.
-        # Usually, this is where the user input will go
-        suffix="输入: {input}\n反义词:",
-        # The input variables are the variables that the overall prompt expects.
-        input_variables=["input"],
-        # The example_separator is the string we will use to join the prefix, examples, and suffix together with.
-        example_separator="\n\n",
-    )
-
-    # We can now generate a prompt using the `format` method.
-    print(utils.Model(few_shot_prompt.format(input="大")))
 
 
 def setting(config):

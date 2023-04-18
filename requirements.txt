@@ -11,3 +11,6 @@ flask_cors
 langchain
 sentencepiece
 cpm_kernels
+google-api-python-client 
+google-auth-httplib2 
+google-auth-oauthlib

@@ -5,3 +5,5 @@ __pycache__
 config.yaml
 /models/
 test.py
+credentials.json
+token.json
