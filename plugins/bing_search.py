@@ -1,12 +1,17 @@
 from bs4 import BeautifulSoup
 from utils import utils
 from utils.base import BaseSearch
+import jieba
 
 class BingSearch(BaseSearch):
     def __init__(self):
         super().__init__()
 
     def find(self, search_query):
+        search_query = jieba.cut(search_query)
+        search_query = self.remove_stopwords(search_query)
+        search_query = " ".join(search_query)
+        utils.logger.info(f"关键词: {search_query}")
         url = f"https://cn.bing.com/search?q={search_query}"
         try:
             res = self.session.get(url, headers=self.headers ,proxies=self.proxies)

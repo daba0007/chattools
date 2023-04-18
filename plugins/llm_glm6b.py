@@ -1,11 +1,51 @@
 from plugins.search import find
 from utils.base import ChatBot
 from utils import utils
+from langchain.llms.base import LLM
+from typing import Optional, List
+from langchain.llms.utils import enforce_stop_tokens
+from transformers import AutoTokenizer, AutoModel
+from utils import utils
 
-class Glm6BChatBot(ChatBot):
-    def __init__(self, model=None, tokenizer=None):
+class Glm6BChatBot(ChatBot, LLM):
+    
+    max_token: int = 10000
+    temperature: float = 0.01
+    top_p = 0.9
+    history = []
+    history_len: int = 10
+    model=None
+    tokenizer=None
+    
+    def __init__(self):
         super().__init__(model)
-        self.tokenizer = tokenizer
+        
+    @property
+    def _llm_type(self) -> str:
+        return "ChatGLM"
+
+    def _call(self,
+              prompt: str,
+              stop: Optional[List[str]] = None) -> str:
+        response, _ = self.model.chat(
+            self.tokenizer,
+            prompt,
+            history=self.history[-self.history_len:] if self.history_len>0 else [],
+            max_length=self.max_token,
+            top_p=self.top_p,
+            temperature=self.temperature,
+        )
+        device, _ = utils.GLM["strategy"].split()
+        import torch
+        if device == 'cuda' and torch.cuda.is_available():
+            with torch.cuda.device(f"{device}:0"):
+                torch.cuda.empty_cache()
+                torch.cuda.ipc_collect()
+        
+        if stop is not None:
+            response = enforce_stop_tokens(response, stop)
+        self.history = self.history+[[None, response]]
+        return response
         
     def chat_init(self, history):
         history_formatted = None
@@ -71,10 +111,9 @@ class Glm6BChatBot(ChatBot):
             print('Error: 不受支持的精度')
             exit()
 
-    def chat(self, prompt, history_formatted, max_length, top_p, temperature, library="mix"):
+    def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix"):
         search_results = find(prompt, library)
         prompt = ' '.join([prompt] + [result['content'] for result in search_results])
-        prompt = "请用少于 100 字以内回答: " + prompt
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                 max_length=max_length, top_p=top_p, temperature=temperature):
             yield response

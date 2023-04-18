@@ -7,6 +7,7 @@ import torch
 from utils import utils
 import yaml
 from flask_cors import CORS
+from langchain import PromptTemplate
 
 # SingleTon
 app = Flask(__name__)
@@ -61,6 +62,10 @@ def load_model():
     utils.mutex.release()
     torch.cuda.empty_cache()
     print(utils.Green, "模型加载完成", utils.White)
+    one_input_prompt = PromptTemplate(input_variables=["device", "precision"], template="模型加载完成\n设备: {adjective} \n 精度: {precision}")
+    device, precision = utils.GLM["strategy"].split()
+    one_input_prompt.format(device=device, precision=precision)
+    llm_result = utils.Model(one_input_prompt)
 
 
 def setting(config):
