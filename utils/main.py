@@ -62,6 +62,15 @@ def load_model():
     utils.mutex.release()
     torch.cuda.empty_cache()
     print(utils.Green, "模型加载完成", utils.White)
+    from langchain import PromptTemplate, FewShotPromptTemplate
+    from utils.noc import noc_example, noc_example_formatter_template, chatlist
+    few_shot_prompt = FewShotPromptTemplate(
+        examples=noc_example,example_prompt=noc_example_formatter_template,
+        prefix="给我一份类似的故障报告",suffix="输入: {input}\输出:",
+        input_variables=["chatlist"],
+        example_separator="\n\n\n",
+    )
+    print(few_shot_prompt.format(input=chatlist))
     """ text = "你好,介绍下自己"
     response = utils.Model(text)
     print("输入: 你好,介绍下自己")
