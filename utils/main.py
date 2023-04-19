@@ -62,10 +62,10 @@ def load_model():
     torch.cuda.empty_cache()
     print(utils.Green, "模型加载完成", utils.White)
     from langchain import PromptTemplate, FewShotPromptTemplate
-    from utils.noc import noc_example, chatlist
+    from utils.noc import noc_example, chatlist, noc_example_formatter_template
     noc_example_prompt = PromptTemplate(
         input_variables=["chatlist"],
-        template=noc_example,
+        template=noc_example_formatter_template,
     )
     few_shot_prompt = FewShotPromptTemplate(
         examples=noc_example,example_prompt=noc_example_prompt,
