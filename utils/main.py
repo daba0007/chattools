@@ -7,7 +7,6 @@ import torch
 from utils import utils
 import yaml
 from flask_cors import CORS
-from langchain.chains import RetrievalQA
 
 # SingleTon
 app = Flask(__name__)
@@ -66,15 +65,16 @@ def load_model():
     from utils.noc import noc_example, noc_example_formatter_template, chatlist
     few_shot_prompt = FewShotPromptTemplate(
         examples=noc_example,example_prompt=noc_example_formatter_template,
-        prefix="给我一份类似的故障报告",suffix="输入: {input}\输出:",
+        prefix="给我一份类似的故障报告",suffix="输入: {chatlist}\输出:",
         input_variables=["chatlist"],
         example_separator="\n\n\n",
     )
-    print(few_shot_prompt.format(input=chatlist))
+    print(few_shot_prompt.format(chatlist=chatlist))
     """ text = "你好,介绍下自己"
     response = utils.Model(text)
     print("输入: 你好,介绍下自己")
     print(f"输出{response}") """
+    
 
 def setting(config):
     """
