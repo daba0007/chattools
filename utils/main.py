@@ -66,17 +66,17 @@ def load_model():
     response = utils.Model(text)
     print("输入: 你好,介绍下自己")
     print(f"输出{response}") """
-    
+
     """ from langchain.document_loaders import GoogleDriveLoader
     loader = GoogleDriveLoader(
         folder_id="1qnyg0NObislAYODBU2CuzJX4-07QCGHi8350XLRJM9U",
         recursive=False
     ) """
     from langchain import SQLDatabase, SQLDatabaseChain
-    db = SQLDatabase.from_uri("")
+    db = SQLDatabase.from_uri(utils.Clickhouse)
     db_chain = SQLDatabaseChain(llm=utils.Model, database=db, verbose=True)
     print(db_chain.run("数据库中有多少个表"))
-    #docs = loader.load()
+    # docs = loader.load()
     """ from langchain.document_loaders import TextLoader
     loader = TextLoader('state_of_the_union.txt', encoding='utf8')
     docs = loader.load()
@@ -112,6 +112,7 @@ def setting(config):
         utils.Lora = config["lora"]
         utils.Fess = config["fess"]
         utils.Bing = config["bing"]
+        utils.Clickhouse = config["clickhouse"]
     except KeyError as e:
         raise ValueError(f'Missing key in config: {e}')
 
@@ -121,7 +122,7 @@ def setting(config):
 
 
 # 读取环境变量
-with open('config.yaml', 'r') as f:
+with open('config.yaml', 'r', encoding='utf-8') as f:
     setting(yaml.safe_load(f))
 # 设置日志
 setup_logger(app)

@@ -6,7 +6,7 @@ mutex = None
 # 用户信息
 User = dict()
 logger = None
-LLM_Type = ""
+LLM_Type = ''
 Tokenizer = None
 Model = None
 Library = None
@@ -16,3 +16,4 @@ Weight = None
 Lora = None
 Fess = None
 Bing = None
+Clickhouse = ''
