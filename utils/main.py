@@ -76,33 +76,6 @@ def load_model():
     print("输入: 你好,介绍下自己")
     print(f"输出{response}") """
 
-    """ from langchain.document_loaders import GoogleDriveLoader
-    loader = GoogleDriveLoader(
-        folder_id="1qnyg0NObislAYODBU2CuzJX4-07QCGHi8350XLRJM9U",
-        recursive=False
-    ) """
-    from langchain import SQLDatabase, SQLDatabaseChain
-    db = SQLDatabase.from_uri(utils.Clickhouse)
-    db_chain = SQLDatabaseChain(llm=utils.Model, database=db, verbose=True)
-    print(db_chain.run("数据库中有多少个表"))
-    # docs = loader.load()
-    """ from langchain.document_loaders import TextLoader
-    loader = TextLoader('state_of_the_union.txt', encoding='utf8')
-    docs = loader.load()
-    from langchain.text_splitter import CharacterTextSplitter
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_documents(docs)
-    if len(texts) > 0 :
-        from langchain.vectorstores import Chroma
-        db = Chroma.from_documents(texts)
-        retriever = db.as_retriever()
-        qa = RetrievalQA.from_chain_type(llm=utils.Model, chain_type="stuff", retriever=retriever)
-        query = "简单说下 inhouse 双活方案的问题点有哪些"
-        print(qa.run(query))
-    else:
-        print("数据为空") """
-
-
 def setting(config):
     """
     更新 utils 模块中的变量。
