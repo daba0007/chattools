@@ -49,11 +49,11 @@ if len(texts) > 0 :
 else:
     print("数据为空") """
     
-from utils.main import setting, load_LLM
+""" from utils.main import setting, load_LLM
 import yaml
 from utils import utils
 
-data = ''
+data = '2023-04-17 13:28:28 | Zhi Wenyu (支文宇) | NOC & PJM : Supervisor那个面板是20分钟聚合数据的，改短一点能看到17分恢复'
 ###
 
 from kor import create_extraction_chain
@@ -85,4 +85,4 @@ chain = create_extraction_chain(
 )
 print("开始测试")
 chain.prompt.format_prompt(text="[user input]").to_string()
-print(chain.predict_and_parse(text=data)["validated_data"])
+print(chain.predict_and_parse(text=data)["validated_data"]) """

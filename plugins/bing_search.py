@@ -1,11 +1,29 @@
+import re
 from bs4 import BeautifulSoup
 from utils import utils
 from utils.base import BaseSearch
 import jieba
 
+with open("plugins/stopword.txt", encoding="utf-8") as f:
+    stopwords = f.read().split('\n')
+
 class BingSearch(BaseSearch):
     def __init__(self):
         super().__init__()
+     
+    def replace_strong(self, s):
+        s = re.sub(r'<strong>', "", s)
+        s = re.sub(r'</strong>', "", s)
+        return s
+        
+    def remove_stopwords(self, search_query):
+        search_query_without_stopwords = []
+        for i in search_query:
+            try:
+                stopwords.index(i)
+            except:
+                search_query_without_stopwords.append(i)
+        return search_query_without_stopwords
 
     def find(self, search_query):
         search_query = jieba.cut(search_query)

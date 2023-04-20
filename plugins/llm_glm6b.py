@@ -107,5 +107,10 @@ class Glm6BChatBot(LLM):
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
             yield response
+            
+    def chat_chain(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature):
+        for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
+                                                  max_length=max_length, top_p=top_p, temperature=temperature):
+            yield response
 
 model = Glm6BChatBot()
