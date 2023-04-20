@@ -3,7 +3,6 @@ from utils import utils
 from langchain.llms.base import LLM
 from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
-from utils import utils
 
 
 class Glm6BChatBot(LLM):

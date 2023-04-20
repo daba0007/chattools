@@ -1,86 +1,88 @@
-""" import requests
-import json
-
-data = {"max_tokens": 2048, "top_p": 0.2, "temperature": 0.8, "library": "fess",
-        "messages": [{"role": "user", "content": "你好"}]}
-headers = {
-    "Content-Type": "application/json",
-    "Accept": "text/event-stream"
-}
-url = "http://127.0.0.1:17860/chat/completions"
-response = requests.post(url, headers=headers, json=data, stream=True)
-# Check if the request was successful
-if response.status_code == 200:
-    # Extract the generated text from the response
-    response_text = ""
-    previous_response = ''
-    for line in response.iter_lines():
-        if line:
-            data = json.loads(line.decode("utf-8"))
-            current_response = data['response']
-            if current_response == "[DONE]":
-                break
-            new_characters = current_response[len(previous_response):]
-            print(new_characters, end='', flush=True)
-            previous_response = current_response
+""" from langchain.document_loaders import GoogleDriveLoader
+    loader = GoogleDriveLoader(
+        folder_id="1qnyg0NObislAYODBU2CuzJX4-07QCGHi8350XLRJM9U",
+        recursive=False
+    ) 
+    from langchain import SQLDatabase, SQLDatabaseChain
+    db = SQLDatabase.from_uri(utils.Clickhouse)
+    db_chain = SQLDatabaseChain(llm=utils.Model, database=db, verbose=True)
+    print(db_chain.run("数据库中有多少个表"))
+    # docs = loader.load()
+    from langchain.document_loaders import TextLoader
+    loader = TextLoader('state_of_the_union.txt', encoding='utf8')
+    docs = loader.load()
+    from langchain.text_splitter import CharacterTextSplitter
+    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    texts = text_splitter.split_documents(docs)
+    if len(texts) > 0 :
+        from langchain.vectorstores import Chroma
+        db = Chroma.from_documents(texts)
+        retriever = db.as_retriever()
+        qa = RetrievalQA.from_chain_type(llm=utils.Model, chain_type="stuff", retriever=retriever)
+        query = "简单说下 inhouse 双活方案的问题点有哪些"
+        print(qa.run(query))
+    else:
+        print("数据为空") """
+        
+        
+""" # google
+from langchain.chains import RetrievalQA
+from langchain.document_loaders import GoogleDriveLoader
+loader = GoogleDriveLoader(
+    document_ids=["1qnyg0NObislAYODBU2CuzJX4-07QCGHi8350XLRJM9U"],
+    credentials_path="credentials.json",
+    token_path="token.json",
+    recursive=False
+)
+docs = loader.load()
+print(docs)
+from langchain.text_splitter import CharacterTextSplitter
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+texts = text_splitter.split_documents(docs)
+if len(texts) > 0 :
+    from langchain.vectorstores import Chroma
+    db = Chroma.from_documents(texts)
+    retriever = db.as_retriever(search_kwargs={"k": 1})
+    qa = RetrievalQA.from_chain_type(llm=utils.Model, chain_type="stuff", retriever=retriever)
+    query = "简单说下 inhouse 双活方案的问题点有哪些"
+    print(qa.run(query))
 else:
-    print(f"Request failed with status code {response.status_code}")
- """
- 
-from __future__ import print_function
+    print("数据为空") """
+    
+from utils.main import setting, load_LLM
+import yaml
+from utils import utils
 
-import os.path
+data = ''
+###
 
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
+from kor import create_extraction_chain
+from kor import from_pydantic
+from pydantic import BaseModel, Field
 
-# If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
+class Issue(BaseModel):
+    time: str = Field(description="时间")
+    user: int = Field(description="说话人")
 
+# 读取环境变量
+with open('config.yaml', 'r', encoding='utf-8') as f:
+    setting(yaml.safe_load(f))
+# Load Model
+load_LLM()
+utils.Model.load_model()
+print(utils.Green, "模型加载完成", utils.White)
 
-def main():
-    """Shows basic usage of the Drive v3 API.
-    Prints the names and ids of the first 10 files the user has access to.
-    """
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-
-    try:
-        service = build('drive', 'v3', credentials=creds)
-
-        # Call the Drive v3 API
-        results = service.files().list(
-            pageSize=10, fields="nextPageToken, files(id, name)").execute()
-        items = results.get('files', [])
-
-        if not items:
-            print('No files found.')
-            return
-        print('Files:')
-        for item in items:
-            print(u'{0} ({1})'.format(item['name'], item['id']))
-    except HttpError as error:
-        # TODO(developer) - Handle errors from drive API.
-        print(f'An error occurred: {error}')
-
-
-if __name__ == '__main__':
-    main()
+schema, validator = from_pydantic(
+    Issue,
+    description="故障信息",
+    many=True,
+    examples=[("2023-04-17 12:15:46 | Wang Shuo (王烁) | CSSRE | https://i.shp.ee/vxf58rp : 发送消息数掉了", {"user": "Wang Shuo (王烁)", "time": "2023-04-17 12:15:46"}),
+              ("2023-04-17 12:19:55 | Lin Zhaoyu (林兆宇) : 应该是进线无法分配了导致的", {"user": "Lin Zhaoyu (林兆宇)", "time": "2023-04-17 12:19:55"}),
+              ("2023-04-17 12:24:18 | Kevin Lin | 林志衡 : 目前 Realtime Sync 还能工作。但如果任务有出错重试时，该任务就不工作了", {"user": "Kevin Lin", "time": "2023-04-17 12:24:18"})],
+)
+chain = create_extraction_chain(
+    utils.Model, schema, encoder_or_encoder_class="csv", validator=validator
+)
+print("开始测试")
+chain.prompt.format_prompt(text="[user input]").to_string()
+print(chain.predict_and_parse(text=data)["validated_data"])
