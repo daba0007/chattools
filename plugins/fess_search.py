@@ -6,6 +6,8 @@ import jieba
 with open("plugins/stopword.txt", encoding="utf-8") as f:
     stopwords = f.read().split('\n')
 
+# 加载自定义词典
+jieba.load_userdict("plugins/user_dict.txt")
 
 class FessSearch(BaseSearch):
     def __init__(self):
@@ -25,20 +27,20 @@ class FessSearch(BaseSearch):
                 search_query_without_stopwords.append(i)
         return search_query_without_stopwords
 
-    def find(self, search_query):
+    def find(self, search_query, step=0):
         try:
-            search_query = jieba.cut(search_query)
+            search_query = jieba.cut_for_search(search_query)
             search_query = self.remove_stopwords(search_query)
             search_query = " ".join(search_query)
             utils.logger.info(f"关键词: {search_query}")
-            fess_path = utils.Fess["path"]
+            fess_path = utils.UniveralSearch.Fess["path"]
             url = f"{fess_path}/json/?q={search_query}&num=10&sort=score.desc&lang=zh_CN"
             res = self.session.get(
                 url, headers=self.headers, proxies=self.proxies)
             r = res.json()
             r = r["response"]['result']
             return [{'title': r[i]['title'], 'content': self.replace_strong(r[i]['content_description'])}
-                    for i in range(min(int(utils.Fess["count"]), len(r)))]
+                    for i in range(min(int(utils.UniveralSearch.Fess["count"]), len(r)))]
         except Exception as e:
             utils.logger.error(f"fess读取失败:{e}")
             return []

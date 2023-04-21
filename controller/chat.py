@@ -79,6 +79,7 @@ def request_completions():
         # 获取 用户信息
         #IP = request.environ.get(
         #    'HTTP_X_REAL_IP') or request.environ.get('REMOTE_ADDR')
+        # 每个时间是能有一个用户在用模型计算
         with utils.mutex:
             #yield "%s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")

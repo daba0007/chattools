@@ -24,4 +24,15 @@ weight:
 # 消息采集比重
   bing: 1
   fess: 9
-clickhouse: ''
+library:
+  source_path: ''
+  # 分块大小
+  size: 200
+  # 分块重叠长度
+  overlay: 100
+  # 知识块抽取数量
+  count: 1
+  # 向量模型存储路径
+  model_path: 'model/text2vec-large-chinese'
+  # faiss运行设备
+  device: 'cpu'

@@ -3,6 +3,7 @@ from utils import utils
 from langchain.llms.base import LLM
 from typing import Optional, List
 from langchain.llms.utils import enforce_stop_tokens
+from langchain.prompts import SystemMessagePromptTemplate, PromptTemplate
 
 
 class Glm6BChatBot(LLM):
@@ -100,17 +101,25 @@ class Glm6BChatBot(LLM):
         if device == 'cuda':
             self.model = self.model.cuda()
 
-    def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix"):
-        search_results = find(prompt, library)
-        prompt = ' '.join([prompt] + [result['content']
+    def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
+        search_results = find(prompt, library, step=step)
+        question = prompt
+        prompt = ' '.join([result['content']
                           for result in search_results])
+        if library == 'local':
+            message_prompt=PromptTemplate(
+                template="你现在只能准确的回答出信息,知道就说信息,不知道就说不知道\n已知信息:{information} 问题:{question}.",
+                input_variables=["information", "question"],
+            )
+            prompt = message_prompt.format(information=prompt, question=question)
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
             yield response
-            
+
     def chat_chain(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature):
         for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
             yield response
+
 
 model = Glm6BChatBot()

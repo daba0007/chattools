@@ -23,7 +23,7 @@ class LlamaChatBot(ChatBot):
                     continue
         return history_formatted+" "
 
-    def chat(self, prompt, history_formatted, max_length, top_p, temperature, mix=False):
+    def chat(self, prompt, history_formatted, max_length, top_p, temperature, library="mix", step=1):
         if mix:
             search_results = find(prompt, mix)
             prompt = ' '.join([prompt] + [result['content'] for result in search_results])

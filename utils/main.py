@@ -7,6 +7,9 @@ import torch
 from utils import utils
 import yaml
 from flask_cors import CORS
+from langchain.vectorstores.faiss import FAISS
+from langchain.embeddings import HuggingFaceEmbeddings
+import sentence_transformers
 
 # SingleTon
 app = Flask(__name__)
@@ -65,7 +68,7 @@ def load_model():
     response = utils.Model(text)
     print("输入: 你好,介绍下自己")
     print(f"输出{response}") """
-    
+
 
 def setting(config):
     """
@@ -83,9 +86,11 @@ def setting(config):
         utils.Llama = config["llama"]
         utils.Weight = config["weight"]
         utils.Lora = config["lora"]
-        utils.Fess = config["fess"]
-        utils.Bing = config["bing"]
-        utils.Clickhouse = config["clickhouse"]
+        utils.UniveralSearch.Fess = config["fess"]
+        utils.UniveralSearch.Bing = config["bing"]
+        utils.Gen_Data.Count = config["library"]["count"]
+        utils.Gen_Data.Model_Path = config["library"]["model_path"]
+        utils.Gen_Data.Device = config["library"]["device"]
     except KeyError as e:
         raise ValueError(f'Missing key in config: {e}')
 
@@ -100,6 +105,14 @@ with open('config.yaml', 'r', encoding='utf-8') as f:
 # 设置日志
 setup_logger(app)
 utils.logger = app.logger
+
+# 读取 embedingsc层
+utils.Embeddings = HuggingFaceEmbeddings(model_name='')
+utils.Embeddings.client = sentence_transformers.SentenceTransformer(
+    utils.Gen_Data.Model_Path, device=utils.Gen_Data.Device)
+# FAISS
+utils.Vectorstore = FAISS.load_local(
+    'vectorstore_path', embeddings=utils.Embeddings)
 
 
 # Load Model

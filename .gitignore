@@ -8,3 +8,6 @@ test.py
 credentials.json
 token.json
 /.chroma/
+vectorstore_path
+/txt
+/txt_out

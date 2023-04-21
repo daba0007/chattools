@@ -6,6 +6,9 @@ import jieba
 
 with open("plugins/stopword.txt", encoding="utf-8") as f:
     stopwords = f.read().split('\n')
+    
+# 加载自定义词典
+jieba.load_userdict("plugins/user_dict.txt")
 
 class BingSearch(BaseSearch):
     def __init__(self):
@@ -25,8 +28,8 @@ class BingSearch(BaseSearch):
                 search_query_without_stopwords.append(i)
         return search_query_without_stopwords
 
-    def find(self, search_query):
-        search_query = jieba.cut(search_query)
+    def find(self, search_query, step=0):
+        search_query = jieba.cut_for_search(search_query)
         search_query = self.remove_stopwords(search_query)
         search_query = " ".join(search_query)
         utils.logger.info(f"关键词: {search_query}")
@@ -45,7 +48,7 @@ class BingSearch(BaseSearch):
                     search_results.append({'title': "["+title+"]("+link+")", 'content': content})
                 except Exception as e:
                     utils.logger.error(f"解析搜索结果时发生错误: {e}")
-            return search_results[:min(int(utils.Bing["count"]), len(search_results))]
+            return search_results[:min(int(utils.UniveralSearch.Fess["count"]), len(search_results))]
         except Exception as e:
             utils.logger.error(f"Bing 搜索发生错误: {e}")
             return []
