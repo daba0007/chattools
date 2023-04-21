@@ -31,7 +31,7 @@ class FessSearch(BaseSearch):
         try:
             search_query = jieba.cut_for_search(search_query)
             search_query = self.remove_stopwords(search_query)
-            search_query = " ".join(search_query)
+            search_query = " ".join(search_query[-3:])
             utils.logger.info(f"关键词: {search_query}")
             fess_path = utils.UniveralSearch.Fess["path"]
             url = f"{fess_path}/json/?q={search_query}&num=10&sort=score.desc&lang=zh_CN"
