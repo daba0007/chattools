@@ -50,8 +50,10 @@ class Glm6BChatBot(LLM):
         history_formatted = []
         current_chat = []
         for chat in history:
+            # 用户信息
             if chat['role'] == "user":
                 current_chat.append(chat['content'])
+            # 机器人信息
             elif chat['role'] in ("AI", "assistant"):
                 current_chat.append(chat['content'])
                 history_formatted.append(tuple(current_chat))
@@ -115,14 +117,9 @@ class Glm6BChatBot(LLM):
                 input_variables=["information", "question"],
             )
             prompt = message_prompt.format(information=prompt, question=question)
-        for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
+        for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
-            yield response
-
-    def chat_chain(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature):
-        for response, _ in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
-                                                  max_length=max_length, top_p=top_p, temperature=temperature):
-            yield response
+            yield response, history
 
 
 model = Glm6BChatBot()

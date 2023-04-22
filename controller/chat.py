@@ -39,11 +39,10 @@ def request_completions():
             #yield "%s\n\n" % json.dumps({"response": (str(len(prompt))+'字正在计算')})
             utils.logger.info(f"\033[1;32mMessage:\033[1;31m{prompt}\033[1;37m")
             try:
-                for response_text in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, library):
+                for response_text, history in utils.Model.chat(prompt, history_formatted, max_length, top_p, temperature, library):
                     if (response_text):
                         # yield "data: %s\n\n" %response_text
-                        yield "%s\n\n" % json.dumps({"response": response_text})
-
+                        yield "%s\n\n" % json.dumps({"response": response_text, "history": history})
                 yield "%s\n\n" % json.dumps({"response": "[DONE]"})
             except Exception as e:
                 error = str(e)
