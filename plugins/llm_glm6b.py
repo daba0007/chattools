@@ -49,7 +49,6 @@ class Glm6BChatBot(LLM):
     def chat_init(self, history):
         history_formatted = []
         current_chat = []
-        print(f"chat_init{history}")
         for chat in history:
             # 用户信息
             if chat['role'] == "user":
@@ -59,7 +58,6 @@ class Glm6BChatBot(LLM):
                 current_chat.append(chat['content'])
                 history_formatted.append(tuple(current_chat))
                 current_chat = []
-        print(f"After: {history_formatted}")
         return history_formatted
 
     def load_model(self):
@@ -78,6 +76,8 @@ class Glm6BChatBot(LLM):
         self.handle_device(precision, device)
         self.handle_precision(precision, device)
         self.model = self.model.eval()
+        from plugins.search import setSearchAgent
+        setSearchAgent()
 
     def handle_device(self, precision, device):
         if device == 'cpu':
@@ -102,6 +102,17 @@ class Glm6BChatBot(LLM):
             self.model = self.model.cuda()
 
     def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
+        from plugins.search import tools
+        from langchain.agents import AgentExecutor
+        agent_executor = AgentExecutor.from_agent_and_tools(agent=utils.SearchAgent, tools=tools, verbose=True)
+        response = agent_executor.run(prompt)
+        print(response)
+        """ for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
+                                                  max_length=max_length, top_p=top_p, temperature=temperature):
+            yield response, history """
+        yield response, []
+
+    """ def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
         search_results = find(prompt, library, step=step)
         print( f"搜索结果{search_results}")
         question = prompt
@@ -110,7 +121,7 @@ class Glm6BChatBot(LLM):
         if library == 'local':
             if history_formatted == []:
                 message_prompt=PromptTemplate(
-                    template="你现在只能准确的回答出信息,知道就说信息,不知道就说不知道\n已知信息:{information} 问题:{question}.你的回答:",
+                    template="请从已知信息和消息历史中查找答案:\n已知信息:{information} \n问题:{question} \n你的回答是:",
                     input_variables=["information", "question"],
                 )
                 prompt = message_prompt.format(information=prompt, question=question)
@@ -123,7 +134,7 @@ class Glm6BChatBot(LLM):
         else:
             if history_formatted == []:
                 message_prompt=PromptTemplate(
-                    template="你现在只能准确的回答出信息,限制在 100 字以内回答\n已知信息:{information} 问题:{question}.你的回答:",
+                    template="请从已知信息和消息历史中查找答案:\n已知信息:{information} \n问题:{question} \n你的回答:",
                     input_variables=["information", "question"],
                 )
                 prompt = message_prompt.format(information=prompt, question=question)
@@ -133,10 +144,9 @@ class Glm6BChatBot(LLM):
                     input_variables=["information", "question"],
                 )
                 prompt = message_prompt.format(information=prompt, question=question)
-        print(history_formatted)
         for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
-            yield response, history
+            yield response, history """
 
 
 model = Glm6BChatBot()

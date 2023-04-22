@@ -32,5 +32,6 @@ Embeddings = None
 Vectorstore = None
 UniveralSearch = UniveralSearchClass()
 Gen_Data = GenDataClass()
+SearchAgent = None
 
 

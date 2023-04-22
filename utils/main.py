@@ -98,7 +98,6 @@ def setting(config):
         raise TypeError(
             f'LLM_Type must be a string, got {type(utils.LLM_Type)}')
 
-
 # 读取环境变量
 with open('config.yaml', 'r', encoding='utf-8') as f:
     setting(yaml.safe_load(f))
