@@ -106,17 +106,19 @@ class Glm6BChatBot(LLM):
         prompt = ' '.join([result['content']
                           for result in search_results])
         if library == 'local':
-            message_prompt=PromptTemplate(
-                template="你现在只能准确的回答出信息,知道就说信息,不知道就说不知道\n已知信息:{information} 问题:{question}.",
-                input_variables=["information", "question"],
-            )
-            prompt = message_prompt.format(information=prompt, question=question)
+            if history_formatted == []:
+                message_prompt=PromptTemplate(
+                    template="你现在只能准确的回答出信息,知道就说信息,不知道就说不知道\n已知信息:{information} 问题:{question}.",
+                    input_variables=["information", "question"],
+                )
+                prompt = message_prompt.format(information=prompt, question=question)
         else:
-            message_prompt=PromptTemplate(
-                template="你现在只能准确的回答出信息,限制在 100 字以内回答\n已知信息:{information} 问题:{question}.",
-                input_variables=["information", "question"],
-            )
-            prompt = message_prompt.format(information=prompt, question=question)
+            if history_formatted == []:
+                message_prompt=PromptTemplate(
+                    template="你现在只能准确的回答出信息,限制在 100 字以内回答\n已知信息:{information} 问题:{question}.",
+                    input_variables=["information", "question"],
+                )
+                prompt = message_prompt.format(information=prompt, question=question)
         for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
             yield response, history
