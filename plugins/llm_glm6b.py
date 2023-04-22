@@ -47,19 +47,15 @@ class Glm6BChatBot(LLM):
         return response
 
     def chat_init(self, history):
-        history_formatted = None
-        if history is not None:
-            history_formatted = []
-            current_chat = []
-            for _, old_chat in enumerate(history):
-                if len(current_chat) == 0 and old_chat['role'] == "user":
-                    current_chat.append(old_chat['content'])
-                elif old_chat['role'] == "AI" or old_chat['role'] == 'assistant':
-                    current_chat.append(old_chat['content'])
-                    history_formatted.append(tuple(current_chat))
-                    current_chat = []
-                else:
-                    continue
+        history_formatted = []
+        current_chat = []
+        for chat in history:
+            if chat['role'] == "user":
+                current_chat.append(chat['content'])
+            elif chat['role'] in ("AI", "assistant"):
+                current_chat.append(chat['content'])
+                history_formatted.append(tuple(current_chat))
+                current_chat = []
         return history_formatted
 
     def load_model(self):
