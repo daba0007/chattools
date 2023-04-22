@@ -49,6 +49,7 @@ class Glm6BChatBot(LLM):
     def chat_init(self, history):
         history_formatted = []
         current_chat = []
+        print(f"chat_init{history}")
         for chat in history:
             # 用户信息
             if chat['role'] == "user":
@@ -58,6 +59,7 @@ class Glm6BChatBot(LLM):
                 current_chat.append(chat['content'])
                 history_formatted.append(tuple(current_chat))
                 current_chat = []
+        print(f"After: {history_formatted}")
         return history_formatted
 
     def load_model(self):
