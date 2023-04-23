@@ -9,11 +9,6 @@ glm:
   # "cpu fp16" cpu 半精度
   # "cuda fp32" cuba 全精度
   # "cuda fp16" cuba 半精度
-llama:
-  path: ""
-  # llama模型位置
-  strategy: ""
-  # 暂无策略
 lora: ""
 fess:
   path: "http://localhost:8080"

@@ -56,6 +56,21 @@ class LocalSearch(BaseSearch):
         except Exception as e:
             print(e)
             return []
+        
+    def find_with_str(self, s,step = 1):
+        try:
+            embedding = utils.Vectorstore.embedding_function(s)
+            scores, indices = utils.Vectorstore.index.search(np.array([embedding], dtype=np.float32), int(utils.Gen_Data.Count))
+            docs = []
+            for j, i in enumerate(indices[0]):
+                if i == -1:
+                    continue
+                docs.append(self.get_doc(i,scores[0][j],step))
+            print(docs)
+            return ' '.join(docs)
+        except Exception as e:
+            print(e)
+            return ""
 
 
 

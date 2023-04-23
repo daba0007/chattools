@@ -76,8 +76,6 @@ class Glm6BChatBot(LLM):
         self.handle_device(precision, device)
         self.handle_precision(precision, device)
         self.model = self.model.eval()
-        from plugins.search import setSearchAgent
-        setSearchAgent()
 
     def handle_device(self, precision, device):
         if device == 'cpu':
@@ -101,18 +99,21 @@ class Glm6BChatBot(LLM):
         if device == 'cuda':
             self.model = self.model.cuda()
 
-    def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
+    """ def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
         from plugins.search import tools
         from langchain.agents import AgentExecutor
-        agent_executor = AgentExecutor.from_agent_and_tools(agent=utils.SearchAgent, tools=tools, verbose=True)
-        response = agent_executor.run(prompt)
-        print(response)
-        """ for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
+        from langchain.callbacks.base import CallbackManager
+        from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+        agent_executor = AgentExecutor.from_agent_and_tools(agent=utils.SearchAgent, tools=tools, verbose=True, streaming=True, callback_manager=CallbackManager([StreamingStdOutCallbackHandler()]))
+        for response, history in agent_executor.run(prompt):
+            print(response)
+            yield response, history
+        for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
             yield response, history """
-        yield response, []
+            
 
-    """ def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
+    def chat(self, prompt, history_formatted=history, max_length=max_token, top_p=top_p, temperature=temperature, library="mix", step=1):
         search_results = find(prompt, library, step=step)
         print( f"搜索结果{search_results}")
         question = prompt
@@ -146,7 +147,7 @@ class Glm6BChatBot(LLM):
                 prompt = message_prompt.format(information=prompt, question=question)
         for response, history in self.model.stream_chat(self.tokenizer, prompt, history_formatted,
                                                   max_length=max_length, top_p=top_p, temperature=temperature):
-            yield response, history """
+            yield response, history
 
 
 model = Glm6BChatBot()

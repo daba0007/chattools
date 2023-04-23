@@ -48,9 +48,37 @@ class BingSearch(BaseSearch):
                     search_results.append({'title': "["+title+"]("+link+")", 'content': content})
                 except Exception as e:
                     utils.logger.error(f"解析搜索结果时发生错误: {e}")
-            return search_results[:min(int(utils.UniveralSearch.Fess["count"]), len(search_results))]
+            return search_results[:min(int(utils.UniveralSearch.Bing["count"]), len(search_results))]
         except Exception as e:
             utils.logger.error(f"Bing 搜索发生错误: {e}")
             return []
+    
+    def find_with_str(self, search_query, step=0):
+        search_query = jieba.cut_for_search(search_query)
+        search_query = self.remove_stopwords(search_query)
+        search_query = " ".join(search_query)
+        utils.logger.info(f"关键词: {search_query}")
+        url = f"https://cn.bing.com/search?q={search_query}"
+        try:
+            res = self.session.get(url, headers=self.headers ,proxies=self.proxies)
+            # 解析响应并提取搜索结果
+            soup = BeautifulSoup(res.text, 'html.parser')
+            results = soup.find_all('li', class_='b_algo')
+            search_results = []
+            for result in results:
+                try:
+                    title = result.find('h2').find('a').text
+                    link = result.find('h2').find('a')['href']
+                    content = result.find('div', class_='b_caption').find('p').text
+                    search_results.append({'title': "["+title+"]("+link+")", 'content': content})
+                except Exception as e:
+                    utils.logger.error(f"解析搜索结果时发生错误: {e}")
+            prompt = ' '.join([result['content']
+                          for result in search_results[:min(int(utils.UniveralSearch.Bing["count"]), len(search_results))]])
+            print(prompt)
+            return prompt
+        except Exception as e:
+            utils.logger.error(f"Bing 搜索发生错误: {e}")
+            return ""
 
 bing_search = BingSearch()
