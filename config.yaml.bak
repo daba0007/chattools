@@ -9,6 +9,10 @@ glm:
   # "cpu fp16" cpu 半精度
   # "cuda fp32" cuba 全精度
   # "cuda fp16" cuba 半精度
+openai:
+  model: "gpt-3.5-turbo"
+  # gpt-3.5-turbo
+  key: ""
 lora: ""
 fess:
   path: "http://localhost:8080"
@@ -31,3 +35,9 @@ library:
   model_path: 'model/text2vec-large-chinese'
   # faiss运行设备
   device: 'cpu'
+graph:
+  user: ""
+  # 分块大小
+  password: ""
+  # 分块重叠长度
+  host: ""

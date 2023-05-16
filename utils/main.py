@@ -9,7 +9,9 @@ import yaml
 from flask_cors import CORS
 from langchain.vectorstores.faiss import FAISS
 from langchain.embeddings import HuggingFaceEmbeddings
+from utils.database import Neo4jDatabase
 import sentence_transformers
+from utils.agents.agent import CMDBAgent
 
 # SingleTon
 app = Flask(__name__)
@@ -57,6 +59,7 @@ def load_LLM():
     except Exception as e:
         print(f"LLM模型加载失败:{e}")
 
+
 def load_model():
     utils.mutex.acquire()
     utils.Model.load_model()
@@ -65,49 +68,16 @@ def load_model():
     print(utils.Green, "模型加载完成", utils.White)
     """ text = "你好,介绍下自己"
     response = utils.Model(text)
-    print("输入: 你好,介绍下自己")
-    print(f"输出{response}") """
+    print("你好,请介绍下自己")
+    print(f"{response}") """
     """ from plugins.search import setSearchAgent, tools
     from langchain.agents import AgentExecutor
     setSearchAgent()
-    agent_executor = AgentExecutor.from_agent_and_tools(agent=utils.SearchAgent, tools=tools, verbose=True)
+    agent_executor = AgentExecutor.from_agent_and_tools(
+        agent=utils.SearchAgent, tools=tools, verbose=True)
     agent_executor.run("Space的地址是多少") """
-    #from plugins.agent import setAgent
-    #setAgent()
-    from langchain.prompts import SystemMessagePromptTemplate, PromptTemplate
-    message_prompt=PromptTemplate(
-        template="""请对我的问题进行分类：
-1. 如果是咨询地址，网站地址，平台地址，个人信息等问题，请回答：Local
-2. 如果是询问某个事物的含义或定义，请回答：Fess
-3. 其他则按你的回答回复
-
-此外不允许出现其他的回答
-
-示例对话：
-问题: 请问百度的地址是多少
-回答: Local
-问题：google平台的网址
-回答：Local
-问题：怎样访问Github
-回答：Local
-
-开始提问
-问题: {question}
-""",
-        input_variables=["question"],
-    )
-    prompt = message_prompt.format(question="Space平台的网址")
-    print(prompt)
-    print(utils.Model(prompt))
-    print("------------------------")
-    prompt = message_prompt.format(question="什么是cschat")
-    print(prompt)
-    print(utils.Model(prompt))
-    print("------------------------")
-    prompt = message_prompt.format(question="今天天气怎么样")
-    print(prompt)
-    print(utils.Model(prompt))
-    print("------------------------")
+    # from plugins.agent import setAgent
+    # setAgent()
 
 
 def setting(config):
@@ -121,6 +91,9 @@ def setting(config):
         utils.Gen_Data.Count = config["library"]["count"]
         utils.Gen_Data.Model_Path = config["library"]["model_path"]
         utils.Gen_Data.Device = config["library"]["device"]
+        utils.OpenAI = config["openai"]
+        utils.GraphDB = Neo4jDatabase(host=config["graph"]["host"], user=config["graph"]["user"], password=config["graph"]["password"])
+        utils.CmdbAgent = CMDBAgent.initialize(cmdb_graph=utils.GraphDB, model_name=config["openai"]["model"],openai_api_key=config["openai"]["key"])
     except KeyError as e:
         raise ValueError(f'Missing key in config: {e}')
 
@@ -128,12 +101,13 @@ def setting(config):
         raise TypeError(
             f'LLM_Type must be a string, got {type(utils.LLM_Type)}')
 
-# 读取环境变量
-with open('config.yaml', 'r', encoding='utf-8') as f:
-    setting(yaml.safe_load(f))
 # 设置日志
 setup_logger(app)
 utils.logger = app.logger
+# 读取环境变量
+with open('config.yaml', 'r', encoding='utf-8') as f:
+    setting(yaml.safe_load(f))
+
 
 # 读取 embedingsc层
 utils.Embeddings = HuggingFaceEmbeddings(model_name='')

@@ -33,5 +33,8 @@ Vectorstore = None
 UniveralSearch = UniveralSearchClass()
 Gen_Data = GenDataClass()
 SearchAgent = None
+OpenAI = None
+GraphDB = None
+CmdbAgent = None
 
 

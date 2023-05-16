@@ -54,23 +54,23 @@ class LocalSearch(BaseSearch):
                 docs.append(self.get_doc(i,scores[0][j],step))
             return docs
         except Exception as e:
-            print(e)
+            utils.logger.error(e)
             return []
         
-    def find_with_str(self, s,step = 1):
+    def find_with_str(self, s, embedding=None, scores=None, step=1):
         try:
-            embedding = utils.Vectorstore.embedding_function(s)
-            scores, indices = utils.Vectorstore.index.search(np.array([embedding], dtype=np.float32), int(utils.Gen_Data.Count))
-            docs = []
-            for j, i in enumerate(indices[0]):
-                if i == -1:
-                    continue
-                docs.append(self.get_doc(i,scores[0][j],step))
-            print(docs)
-            return ' '.join(docs)
+            if not embedding:
+                embedding = utils.Vectorstore.embedding_function(s)
+            if not scores:
+                scores, indices = utils.Vectorstore.index.search(np.array([embedding], dtype=np.float32), int(utils.Gen_Data.Count))
+
+            docs = [self.get_doc(i, scores[0][j], step) for j, i in enumerate(indices[0]) if i != -1]
+            contentlist = [i["content"] for i in docs]
+            return ' '.join(contentlist)
         except Exception as e:
-            print(e)
+            utils.logger.error(e)
             return ""
+
 
 
 

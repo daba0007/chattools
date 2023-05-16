@@ -1,10 +1,37 @@
-from flask import Blueprint, request, Response, abort, stream_with_context
+from flask import Blueprint, request, Response, abort, stream_with_context, jsonify
 import torch
 import json
-import os
+from utils.agents.run import get_result_and_thought_using_graph
+from utils.template.cypher_database_tool import getCypher
 from utils import utils
 
 chat_ops = Blueprint('chat_ops', __name__)
+
+@chat_ops.route('/chat/graph')
+def get_graph():
+    try:
+        message = request.args.get('message')
+        if message == None:
+            return jsonify(dict(result=''))
+        result = utils.GraphDB.get_g6_graph(cypher_query=getCypher(utils.Model, message))
+        return jsonify(dict(result=result))
+    except Exception as e:
+        # Log stack trace
+        utils.logger.exception(e)
+        return jsonify({'error': str(e)}), 500
+
+@chat_ops.route('/chat/predict')
+def get_predict():
+    try:
+        message = request.args.get('message')
+        if message == None:
+            return jsonify([])
+        result = get_result_and_thought_using_graph(utils.CmdbAgent, message)
+        return jsonify(result)
+    except Exception as e:
+        # Log stack trace
+        utils.logger.exception(e)
+        return jsonify({'error': str(e)}), 500
 
 @chat_ops.route('/chat/completions', methods=['POST'])
 def request_completions():

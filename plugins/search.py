@@ -40,7 +40,6 @@ class FessTools(BaseTool):
         """Use the tool asynchronously."""
         raise NotImplementedError("BingSearchRun does not support async")
 
-# 计算工具，暂且写死返回3
 class LocalTools(BaseTool):
     name = "搜索 Local"
     description = "搜索网站地址和个人信息"
@@ -55,17 +54,24 @@ from typing import List, Union
 from langchain.schema import AgentAction, AgentFinish, HumanMessage
 import re
  
-template="""在回答问题之前，请使用以下格式进行思考并适当使用工具:
+template="""在回答问题之前，必须使用以下格式分析解决问题并适当使用工具:
 {tools}
 
 问题: 你必须回答的问题
-思考: 你必须经常考虑要怎么做
+思考: 对于问题以及已有的信息进行的思考
 操作: 要采取的动作应该是[{tool_names}]的其中一种
 输入: 操作的结果
-观察: 根据操作的结果进行的思考
-...(此 思考/操作/输入/观察可以重复多次)
-我想: 我现在知道答案了
+观察: 查看输入的内容是有相关信息,如果有可以提炼出来得出最终答案
+...(此 思考/操作/输入/观察 可以重复多次直到得出答案)
 最终回答: 原始输入问题的最终答案
+
+示例:
+问题: 如何访问百度
+思考: 我不知道百度的地址
+操作: Local
+输入: 百度的地址是多少
+观察: 百度: https://www.baidu.com/
+最终回答: https://www.baidu.com/
 
 开始!
 
@@ -79,20 +85,20 @@ template="""在回答问题之前，请使用以下格式进行思考并适当�
     ),Tool(
         name = "Loca",
         func=local_search.find,
-        description="搜索网站地址和个人信息"
+        description="搜索网址,地址,平台以及个人信息"
     )] """
 
 def test(s):
-    return "阿根廷"
+    return "不知道"
 
 tools=[Tool(
+        name = "Local",
+        func=local_search.find_with_str,
+        description="可以在本地进行搜索，咨询平台，地址，网址或个人信息时使用的工具"
+    ),Tool(
         name = "Bing",
         func=test,
         description="联网搜索使用的工具,遇到不知道的事情，无法预测和推测的事情时就要用这个工具搜索"
-    ),Tool(
-        name = "Local",
-        func=local_search.find_with_str,
-        description="可以在本地进行搜索，咨询平台，地址，网站地址或个人信息时使用的工具"
     )]
 
 class CustomPromptTemplate(StringPromptTemplate):
@@ -133,7 +139,7 @@ class CustomOutputParser(AgentOutputParser):
                 log=llm_output,
             )
         # Parse out the action and action input
-        regex = r"操作\s*\d*\s*:(.*?)\n操作\s*\d*\s*输入\s*\d*\s*:[\s]*(.*)"
+        regex = r"操作\s*\d*\s*:(.*?)\n输入\s*\d*\s*:[\s]*(.*)"
         print(utils.Green, llm_output, utils.White)
         match = re.search(regex, llm_output, re.DOTALL)
         if not match:

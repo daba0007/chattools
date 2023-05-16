@@ -44,6 +44,24 @@ class FessSearch(BaseSearch):
         except Exception as e:
             utils.logger.error(f"fess读取失败:{e}")
             return []
+        
+    def find_with_str(self, search_query, step=0):
+        try:
+            search_query = jieba.cut_for_search(search_query)
+            search_query = self.remove_stopwords(search_query)
+            search_query = ' '.join(search_query[-3:])
+            utils.logger.info(f"关键词: {search_query}")
+            fess_path = utils.UniveralSearch.Fess["path"]
+            url = f"{fess_path}/json/?q={search_query}&num=10&sort=score.desc&lang=zh_CN"
+            res = self.session.get(url, headers=self.headers, proxies=self.proxies)
+            r = res.json()["response"]["result"]
+            contentlist = [self.replace_strong(result['content_description']) for result in r[:int(utils.UniveralSearch.Fess["count"])]]
+            return contentlist
+        except Exception as e:
+            utils.logger.error(f"fess读取失败:{e}")
+            return []
+
+
 
 
 fess_search = FessSearch()
